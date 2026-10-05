@@ -1,6 +1,11 @@
-const VERSION = 'balkiz-shell-v2.0.0';
-const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/lib/knowledge.js', '/lib/templates.js', '/lib/files.js', '/lib/sse.js', '/assets/balkiz-mark.svg', '/assets/ilkyar-logo.png', '/manifest.webmanifest', '/vendor/marked.umd.js'];
-self.addEventListener('install', event => event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(SHELL))));
+const VERSION = 'balkiz-shell-v2.1.0';
+const SHELL = ['/', '/index.html', '/styles.css?v=2.1.0', '/app.js?v=2.1.0', '/lib/knowledge.js?v=2.1.0', '/lib/activities.js?v=2.1.0', '/lib/templates.js?v=2.1.0', '/lib/expanded-templates.js?v=2.1.0', '/lib/files.js?v=2.1.0', '/lib/sse.js?v=2.1.0', '/assets/balkiz-mark.svg', '/assets/ilkyar-logo.png', '/manifest.webmanifest', '/vendor/marked.umd.js'];
+const SHELL_PATHS = new Set(SHELL.map(path => path.split('?')[0]));
+self.addEventListener('install', event => event.waitUntil((async () => {
+  await (await caches.open(VERSION)).addAll(SHELL);
+  // Versioned modules keep open pages coherent; take over without reloading a live chat.
+  await self.skipWaiting();
+})()));
 self.addEventListener('activate', event => event.waitUntil((async () => {
   for (const key of await caches.keys()) if (key.startsWith('balkiz-shell-') && key !== VERSION) await caches.delete(key);
   await self.clients.claim();
@@ -12,7 +17,12 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).catch(() => caches.match('/index.html'))); return;
   }
-  if (SHELL.includes(url.pathname)) {
-    event.respondWith(caches.open(VERSION).then(async cache => (await cache.match(event.request)) || fetch(event.request)));
+  if (SHELL_PATHS.has(url.pathname)) {
+    event.respondWith(caches.open(VERSION).then(async cache => (await cache.match(event.request)) || fetch(event.request).catch(async error => {
+      // Earlier open pages can still read the shell if they go offline after an update.
+      const fallback = await cache.match(event.request, { ignoreSearch: true });
+      if (fallback) return fallback;
+      throw error;
+    })));
   }
 });

@@ -1,7 +1,8 @@
-import { SOURCES, DISCLAIMER, KNOWLEDGE_VERSION } from './lib/knowledge.js';
-import { TEMPLATES } from './lib/templates.js';
-import { extractFile, FILE_LIMITS } from './lib/files.js';
-import { readSSE } from './lib/sse.js';
+import { SOURCES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.1.0';
+import { TEMPLATES } from './lib/templates.js?v=2.1.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.1.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.1.0';
+import { readSSE } from './lib/sse.js?v=2.1.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -19,6 +20,10 @@ try {
 const icon = name => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const uid = () => crypto.randomUUID();
+// Populate choices before restoring chats so new fields and old science selections survive.
+$('#domain').replaceChildren(new Option('Birlikte seçelim', 'general'), ...ACTIVITY_AREAS.map(area => new Option(area.label, area.id)), new Option('Fen bilimleri · genel', 'science'));
+$('#template-category').replaceChildren(new Option('Tüm başlıklar', 'all'), ...ACTIVITY_AREAS.map(area => new Option(area.label, area.id)));
+$('#template-count').textContent = TEMPLATES.length;
 function toast(message) { e.toast.textContent = message; e.toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => e.toast.classList.remove('show'), 4500); }
 function announce(message) { $('#announce').textContent = message; }
 function safeURL(url) { try { const parsed = new URL(url); return ['https:', 'http:'].includes(parsed.protocol) ? parsed.href : ''; } catch { return ''; } }
@@ -121,13 +126,14 @@ const IDEAS = [
   { icon: 'check', title: 'Planını gözden geçir', text: 'Bilimsel dayanağı ve riskleri değerlendir.', query: 'Etkinlik planımı bilimsel doğruluk, yaşa uygunluk, malzeme ve güvenlik açısından değerlendir. Planımı aşağıya ekleyeceğim:', task: 'review', domain: 'science' },
 ];
 function welcome() {
-  e.thread.innerHTML = `<div class="welcome"><div class="welcome-kicker"><span class="small-dot"></span> BİLİMİ BİRLİKTE KEŞFEDELİM</div><h1>Küçük bir merak,<br><span>büyük bir keşif.</span></h1><p class="welcome-copy">Çocukların sorularından ilham al. Etkinlik fikrini paylaş; yaşa uygun, anlaşılır ve uygulanabilir bir plan geliştirelim.</p><div class="welcome-grid">${IDEAS.map((idea, index) => `<button class="idea-card" data-idea="${index}"><div class="idea-icon${index % 2 ? ' warm' : ''}">${icon(idea.icon)}</div><span class="card-arrow">↗</span><b>${idea.title}</b><small>${idea.text}</small></button>`).join('')}</div><p class="topic-label">YA DA BİR ALANDAN BAŞLA</p><div class="topic-chips">${[['physics','Fizik'],['chemistry','Kimya'],['science','Fen'],['ai','Yapay zekâ'],['astronomy','Astronomi']].map(([domain, title]) => `<button class="topic-chip" data-domain="${domain}" aria-pressed="${$('#domain').value === domain}">${title}</button>`).join('')}</div></div>`;
+  e.thread.innerHTML = `<div class="welcome"><div class="welcome-kicker"><span class="small-dot"></span> BİRLİKTE ÖĞRENELİM</div><h1>Küçük bir merak,<br><span>büyük bir keşif.</span></h1><p class="welcome-copy">Çocukların sorularından ilham al. Bilimden sanata etkinlik fikrini paylaş; yaşa uygun, anlaşılır ve uygulanabilir bir plan geliştirelim.</p><div class="welcome-grid">${IDEAS.map((idea, index) => `<button class="idea-card" data-idea="${index}"><div class="idea-icon${index % 2 ? ' warm' : ''}">${icon(idea.icon)}</div><span class="card-arrow">↗</span><b>${idea.title}</b><small>${idea.text}</small></button>`).join('')}</div><p class="topic-label">YA DA BİR ALANDAN BAŞLA</p><div class="topic-chips">${[['physics','Fizik / Fen'],['chemistry','Kimya'],['ai','Yapay zekâ'],['astronomy','Astronomi'],['drama','Yaratıcı drama'],['origami','Origami']].map(([domain, title]) => `<button class="topic-chip" data-domain="${domain}" aria-pressed="${$('#domain').value === domain}">${title}</button>`).join('')}</div><button class="welcome-library" data-library>${icon('book')} ${ACTIVITY_AREAS.length} başlıkta ${TEMPLATES.length} hazır taslağa göz at <span>↗</span></button></div>`;
   e.thread.querySelectorAll('[data-idea]').forEach(button => button.onclick = () => {
     const idea = IDEAS[Number(button.dataset.idea)]; e.input.value = idea.query; $('#task').value = idea.task; $('#domain').value = idea.domain; settingsChanged(); grow(); e.input.focus();
   });
   e.thread.querySelectorAll('[data-domain]').forEach(button => button.onclick = () => {
     $('#domain').value = button.dataset.domain; settingsChanged(); e.input.focus();
   });
+  e.thread.querySelector('[data-library]').onclick = () => $('#templates-open').click();
 }
 function addMessage(message) {
   const article = document.createElement('article'); article.className = `message ${message.role}`;
@@ -145,17 +151,17 @@ function addMessage(message) {
   e.thread.append(article); return article;
 }
 function responseMeta(article, meta) {
-  article.querySelector('.response-label').textContent = meta.cached ? '· Kaydedilmiş yanıt' : meta.profile === 'compact' ? '· Kısa yanıt' : '';
+  article.querySelector('.response-label').textContent = meta.profile === 'template' ? '· Hazır taslak' : meta.cached ? '· Kaydedilmiş yanıt' : meta.profile === 'compact' ? '· Kısa yanıt' : '';
   const footer = article.querySelector('.response-footer'); footer.hidden = false; footer.replaceChildren();
   if (Array.isArray(meta.sources) && meta.sources.length) {
-    const label = document.createElement('div'); label.textContent = 'Yanıta eşlik eden başvuru notları · canlı arama yapılmadı'; footer.append(label);
+    const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Taslağın başvuru kaynakları · uygulamadan önce incele' : 'Yanıta eşlik eden başvuru notları · canlı arama yapılmadı'; footer.append(label);
     const links = document.createElement('div'); links.className = 'response-sources';
     for (const ref of meta.sources) {
       const source = SOURCES.find(source => source.id === ref.id); if (!source) continue;
       const link = document.createElement('a'); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${source.publisher} · ${source.title}`; links.append(link);
     }
     footer.append(links);
-  } else { const label = document.createElement('div'); label.textContent = 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
+  } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
   const note = document.createElement('div'); note.textContent = DISCLAIMER; footer.append(note);
   if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? 'Uzun geçmişin yalnızca son ilgili kısmı kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); footer.append(limits); }
 }
@@ -359,14 +365,27 @@ for (const dialog of document.querySelectorAll('dialog')) {
   dialog.querySelector('.dialog-close').onclick = () => dialog.close();
   dialog.addEventListener('click', event => { if (event.target === dialog) { const rect = dialog.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close(); } });
 }
-for (const template of TEMPLATES) {
-  const card = document.createElement('div'); card.className = 'template-card'; card.innerHTML = `<div class="template-meta">${template.age} yaş · ${template.duration} dakika · çevrimdışı taslak</div><h3>${escapeHTML(template.title)}</h3><p>${escapeHTML(template.summary)}</p>`;
-  const button = document.createElement('button'); button.textContent = 'Taslağı aç'; button.onclick = () => {
-    $('#library-dialog').close(); const chat = createChat({ ...DEFAULTS, domain: template.domain, age: template.age, duration: template.duration }); if (!chat) return;
-    chat.title = template.title; chat.messages.push({ role: 'assistant', content: template.content, status: 'done', meta: { sources: [], profile: 'template' } });
-    save(); render(); toast('Taslak açıldı. İndirip çevrimdışı kullanabilir veya bir mesajla geliştirebilirsin.');
-  }; card.append(button); $('#template-list').append(card);
+function renderTemplates() {
+  const query = normalize($('#template-search').value.trim()), category = $('#template-category').value;
+  const visible = TEMPLATES.filter(template => (category === 'all' || template.domain === category) && normalize(`${template.title} ${template.summary} ${activityLabel(template.domain)} ${template.materials || ''}`).includes(query));
+  const list = $('#template-list'); list.replaceChildren();
+  $('#template-results').textContent = `${visible.length} / ${TEMPLATES.length} taslak · hazır taslak açmak kota kullanmaz`;
+  for (const template of visible) {
+    const card = document.createElement('article'); card.className = 'template-card'; card.innerHTML = `<span class="template-category">${escapeHTML(activityLabel(template.domain))}</span><div class="template-meta">${template.age} yaş · ${template.duration} dakika</div><h3>${escapeHTML(template.title)}</h3><p>${escapeHTML(template.summary)}</p>`;
+    const button = document.createElement('button'); button.textContent = 'Taslağı aç'; button.setAttribute('aria-label', `${template.title} taslağını aç`); button.onclick = () => {
+      if (!canNavigate()) return;
+      $('#library-dialog').close(); const chat = createChat({ ...DEFAULTS, domain: template.domain, age: template.age, duration: template.duration, materials: template.materials || '' }); if (!chat) return;
+      chat.title = template.title; chat.messages.push({ role: 'assistant', content: template.content, status: 'done', meta: { sources: SOURCES.filter(source => template.sourceIds?.includes(source.id)).map(source => ({ id: source.id })), profile: 'template' } });
+      save(); render(); toast('Taslak açıldı. İndirip kullanabilir veya bir mesajla geliştirebilirsin.');
+    }; card.append(button); list.append(card);
+  }
+  if (!visible.length) {
+    const empty = document.createElement('p'); empty.className = 'template-empty'; empty.textContent = 'Bu aramada taslak bulunamadı. Başka bir sözcük dene veya tüm başlıkları seç.'; list.append(empty);
+  }
 }
+$('#template-search').addEventListener('input', renderTemplates);
+$('#template-category').addEventListener('change', renderTemplates);
+renderTemplates();
 for (const source of SOURCES) {
   const link = document.createElement('a'); link.className = 'source-entry'; link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.innerHTML = `<b>${escapeHTML(source.title)} ↗</b><span>${escapeHTML(source.publisher)}</span>`; $('#source-list').append(link);
 }

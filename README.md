@@ -1,4 +1,4 @@
-# BALKIZ Light · Etkinlik atölyesi
+# BALKIZ Light 2.1 · Etkinlik atölyesi
 
 İLKYAR projelerinde etkinlik hazırlayan gönüllüler için hafif, Türkçe bir çalışma alanı. Mevcut BALKIZ Light reposunun güncellenmiş sürümüdür. Sabit BALKIZ logosu ve sağ üstte resmi İLKYAR logosu kullanılır.
 
@@ -8,6 +8,8 @@
 2. Vercel’de repoyu içe aktar. Framework: **Other**. `vercel.json` kurulum, build ve `public` çıktı klasörünü tanımlar.
 3. Vercel → Settings → Environment Variables: **GROQ_API_KEY** ekle. Anahtar yalnızca sunucuda olmalı; `NEXT_PUBLIC_` kullanma.
 4. Yeniden deploy et. Paket bir API anahtarı içermez.
+
+Önceki sürümden güncelliyorsan bu paketteki dosyaların tamamını kullan; özellikle `lib/activities.js` ve `lib/expanded-templates.js` dosyalarını koru. Yayından sonra açık sayfayı bir kez yenile. Sürüm işaretli tarayıcı dosyaları ve yenilenen çevrimdışı önbellek, eski kütüphanenin güncel arayüzle karışmasını önlemek için eklenmiştir. Cihazdaki sohbet geçmişi korunur.
 
 Çok sayıda kullanıcı için isteğe bağlı ortak kota kontrolü:
 
@@ -43,8 +45,18 @@ Groq limitleri model ve kuruluş bazındadır. 5 Ekim 2026’da resmi tabloda GP
 - Akışla gelen yanıt, durdurma, manuel tekrar deneme; kullanıcı yukarı okurken kaydırma konumu korunur.
 - Yerel geçmiş, arama, JSON yedekleme ve mevcut çalışmaları koruyarak yedek yükleme.
 - Markdown indirme, yanıta kopyalama, açık/koyu görünüm.
-- Üç çevrimdışı etkinlik taslağı ve uygulama kabuğu. İlk açılış internet gerektirir. Yapay zekâ çevrimdışı çalışmaz.
+- 22 başlıkta 25 çevrimdışı başlangıç taslağı, başlık/malzeme araması ve alan filtresi. Taslak açmak Groq çağrısı veya token harcamaz; bir mesajla yapay zekâdan geliştirme istemek kota kullanır. İlk açılış internet gerektirir. Yapay zekâ çevrimdışı çalışmaz.
 - Ücretsiz, yerel kaynaklar; ilk yüklemede PDF/DOCX okuyucuları indirilmez, gerekince aynı siteden yüklenir.
+
+## Etkinlik kütüphanesi
+
+Kullanıcının paylaştığı klasör başlıkları kütüphanede ve etkinlik ayarlarında bulunur: Kimya, Fizik / Fen, Edebiyat, Geleceğe Mektuplar, İlkokullara Etkinlik, Astronomi, Yaratıcı Drama, Masa Deneyleri, Matematik, Müzik, 3. Koridor Deneyleri, VR, Yapay Zeka Etkinliği, 0. Atölyeler, 1. Dış Deneyler, Denge Deneyi, Resim, 2. Gece deneyleri, Robot, Origami, İlkyar Tanıtımı ve Göremediğimiz Canavarlar.
+
+Her başlık için bir yeni taslak eklendi; önceki Ay evreleri, ölçüm ve sınıflandırma taslakları korundu. Görsel yalnızca başlıkları içerdiği için klasörlerden belge veya resmi program aktarılmadı. Planlar bu başlıklardan yola çıkarak oluşturulan başlangıç önerileridir. Her yeni taslak hedef, malzemeler, gönüllü görevleri, süreli akış, sorular, değerlendirme, sınırlar, güvenlik ve daha az malzemeyle uygulama içerir. Açılan taslak, yaş/süre/alan/malzeme ayarlarını doldurur ve Markdown olarak indirilebilir.
+
+Robot taslağı komut dizilerini kâğıt üzerinde çalıştırır. VR taslağı mevcut, uygun cihaz varsa kullanılabilecek bir etkinlik önerisidir; uygulama VR oynatıcısı sunmaz. Her ikisi de yeni cihaz veya ücretli servis olmadan uygulanabilen alternatif içerir. Gece ve dış alan taslaklarının izin/gözetim koşulları ayrıca belirtilmiştir; mikrobiyoloji taslağında canlı örnek veya kültür kullanılmaz. Mektuplar çocuğa aittir ve kişisel bilgilerinin modele gönderilmesi istenmez.
+
+Yeni içerikler yalnızca tarayıcıda saklanan statik metinlerdir. Arama ve filtreleme yerelde yapılır. Tüm katalog her yapay zekâ isteğine eklenmez; yalnızca seçili alan ve ilgili kısa kaynak notları kullanılır. Sanat/edebiyat gibi alanlardaki basit yaratıcı işler hızlı modele yönlenebilir; bilimsel içerik ve inceleme istekleri bilim modelini kullanır.
 
 ## Dosyalar
 
@@ -54,7 +66,7 @@ Dosyanın kendisi ve çıkarılan tam metin cihaz belleğinde kalır; sohbet kay
 
 ## Bilimsel doğruluk ve güvenlik
 
-Yanıtların tamamının doğru olduğu garanti edilmez. Sabit kaynak notları NASA, NIST, American Chemical Society ve Google Developers sayfalarından editoryal olarak hazırlanmıştır. Kaynak seçkisi dar kapsamlıdır; canlı web araması veya her cevabın otomatik teyidi değildir. İlgili referans varsa modele aktarılır; kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir. Model, doğrulanamayan ayrıntıları belirtmeye ve kaynak/DOI uydurmamaya yönlendirilir.
+Yanıtların tamamının doğru olduğu garanti edilmez. Sabit kaynak notları NASA, NIST, American Chemical Society, Google Developers, Science Buddies, Exploratorium, CS Unplugged, American Museum of Natural History ve resmi İLKYAR sayfalarından editoryal olarak hazırlanmıştır. İlgili taslaklarda kaynak bağlantıları bulunur. Kaynak seçkisi dar kapsamlıdır; canlı web araması veya her cevabın otomatik teyidi değildir. İlgili referans varsa modele aktarılır; kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir. Model, doğrulanamayan ayrıntıları belirtmeye ve kaynak/DOI uydurmamaya yönlendirilir.
 
 Bilimsel bilgi, varsayım, gözlem ve öneri ayrılmalı; hesaplarda birimler gösterilmelidir. Deneylerde yetişkin gözetimi, yaşa uygunluk ve ilgili malzeme riskleri istenir. Tehlikeli deneyler yerine düşük riskli alternatif veya simülasyon önerilir. Her çıktı öğretmen/gönüllü kontrolünden geçmelidir. Yalnızca isteme eklenen talimatlar bütün hataları engellemez.
 
