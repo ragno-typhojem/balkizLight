@@ -1,0 +1,11 @@
+{
+  "name": "BALKIZ Light · Etkinlik atölyesi",
+  "short_name": "BALKIZ Light",
+  "lang": "tr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f3",
+  "theme_color": "#175a4c",
+  "icons": [{ "src": "/assets/balkiz-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

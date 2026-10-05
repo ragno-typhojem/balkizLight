@@ -1,34 +1,76 @@
+# BALKIZ Light · Etkinlik atölyesi
 
-# **BALKIZ**  Light
+İLKYAR projelerinde etkinlik hazırlayan gönüllüler için hafif, Türkçe bir çalışma alanı. Mevcut BALKIZ Light reposunun güncellenmiş sürümüdür. Sabit BALKIZ logosu ve sağ üstte resmi İLKYAR logosu kullanılır.
 
-Groq’un `openai/gpt-oss-120b` modelini kullanan, tek dosyalık yapay zekâ sohbet uygulaması.
+## Vercel’e kurulum
 
-## Kurulum
+1. ZIP’i aç; dosyaları GitHub reponun köküne koy. `api/`, `lib/`, `assets/`, `vendor/`, `scripts/` klasörlerini birlikte koru.
+2. Vercel’de repoyu içe aktar. Framework: **Other**. `vercel.json` kurulum, build ve `public` çıktı klasörünü tanımlar.
+3. Vercel → Settings → Environment Variables: **GROQ_API_KEY** ekle. Anahtar yalnızca sunucuda olmalı; `NEXT_PUBLIC_` kullanma.
+4. Yeniden deploy et. Paket bir API anahtarı içermez.
 
-1. **Groq API key al**  
-   - [https://console.groq.com](https://console.groq.com) → API Keys → Create API Key  
-   - `gsk_...` ile başlayan key’i kaydet.
+Çok sayıda kullanıcı için isteğe bağlı ortak kota kontrolü:
 
-2. **Vercel’e deploy et**  
-   ```bash
-   npm i -g vercel
-   cd balkiz
-   vercel
-   ```
-   veya GitHub → Vercel → Import Project.
+- Bir ücretsiz Redis REST hesabından `UPSTASH_REDIS_REST_URL` ve `UPSTASH_REDIS_REST_TOKEN` tanımla.
+- Tüm Vercel instance’larında aynı veritabanını ve `QUOTA_NAMESPACE` değerini kullan. Varsayılan alan adı `balkiz:v2`.
+- Yüksek trafikte `REQUIRE_SHARED_LIMITS=1` ayarlamak, ortak kontrol eksikse isteği reddeder.
+- Redis bağlantısı kesilirse ortak kontrolü atlayıp kontrolsüz istek gönderilmez. Her istek için bir atomik rezervasyon ve bir kilit bırakma çağrısı yapılır. Redis’in ücretsiz kotası da ayrıca izlenmelidir.
+- Redis ayarlanmadan da çalışır; bu durumda kota, eşzamanlılık ve önbellek yalnızca o server instance’ına aittir. Instance’lar arasında kesin toplam sınır garantisi yoktur.
 
-3. **API key ekle**  
-   - Vercel Dashboard → Settings → Environment Variables  
-   - `GROQ_API_KEY` = aldığın key  
-   - Production/Preview/Development işaretle → Redeploy.
+Diğer ayarlar `.env.example` içinde. `.env.local` veya gerçek anahtarları repoya ekleme.
+
+## Ücretsiz kapasite nasıl korunur?
+
+- Bilim, deney, belge incelemesi ve doğruluk değerlendirmesi `openai/gpt-oss-120b`; basit genel metin işleri `openai/gpt-oss-20b` kullanır.
+- Yoğunlukta bilim modeli korunur; yanıt üst sınırı ve taşınan geçmiş azalır. Güncel kullanıcı mesajı kesilmez. Bütçeye sığmayan istek için açık hata verilir.
+- Son ilgili sohbet turları kullanılır; bütün geçmiş her seferinde gönderilmez. Dosyaların soruyla ilgili küçük metin bölümleri seçilir.
+- Token tahmini Türkçe için ihtiyatlı UTF-8 tahminidir; gerçek model tokenizer’ı değildir. Sağlayıcı 429 ve reset başlıkları esas alınır.
+- Dakika/gün istek ve token bütçeleri ayrı tutulur. Günlük kalan istek sayısı, dakikalık limit diye yorumlanmaz.
+- Aynı cihaz oturumu ve istemcinin aynı isteği beş dakika boyunca küçük bir instance önbelleğinden karşılanabilir. Kişisel cevaplar ortak kamu önbelleğine konulmaz. Aynı anda gelen aynı istek yeniden üretilmez.
+- Durdurma ve bağlantı kesilmesi upstream isteğini iptal eder. Yarım yanıtlar ve uzunluk sınırına ulaşan yanıtlar tamamlanmış diye önbelleğe alınmaz.
+- Kuyruk dolunca kaynak tüketen sınırsız bekleme veya otomatik tekrar döngüsü yerine yeniden deneme süresi gösterilir.
+- Varsayılan dört eşzamanlı çağrı ve IP başına dakikada altı istek vardır. Okulun ortak internet bağlantısında aynı IP paylaşılabileceğinden `USER_RPM` ayarı ihtiyaca göre düzenlenebilir.
+- Paylaşımlı modda rezerve edilen token bütçesi ihtiyatlı biçimde korunur; iptal edilen çağrıda kullanım bilinmiyorsa bütçe geri verilmez. Bu, kesin kapasiteyi tahmin üzerinden aşmamaya yardımcı olur.
+
+Groq limitleri model ve kuruluş bazındadır. 5 Ekim 2026’da resmi tabloda GPT-OSS 20B ve 120B için ücretsiz limitler model başına 30 RPM, 1.000 RPD, 8.000 TPM ve 200.000 TPD olarak listelenmiştir. Hesabının kesin sınırları değişebilir. [Groq limitleri](https://console.groq.com/docs/rate-limits) ve [hesap limitleri](https://console.groq.com/settings/limits) üzerinden kontrol et.
+
+Ücretsiz kullanımın sınırsız veya belirli sayıda kullanıcıyı kesin desteklediği iddia edilmez. Gerçek kapasite ortalama token tüketimine, trafik dağılımına, Groq/Redis/Vercel kotalarına bağlıdır. Aynı Groq kuruluşundaki başka uygulamalar da kotayı tüketebilir. Uygulama ücretsiz planı otomatik olarak seçemez; sağlayıcı hesaplarının ücretsiz planlarda ve harcama sınırlarının uygun olduğundan emin ol.
+
+## Gönüllü araçları
+
+- Mobilde ayrı çalışmalar ve ayarlar panelleri; tablet/masaüstünde geniş çalışma alanı.
+- Yaş, alan, süre, katılımcı, malzemeler ve yanıt uzunluğu ayarları.
+- Akışla gelen yanıt, durdurma, manuel tekrar deneme; kullanıcı yukarı okurken kaydırma konumu korunur.
+- Yerel geçmiş, arama, JSON yedekleme ve mevcut çalışmaları koruyarak yedek yükleme.
+- Markdown indirme, yanıta kopyalama, açık/koyu görünüm.
+- Üç çevrimdışı etkinlik taslağı ve uygulama kabuğu. İlk açılış internet gerektirir. Yapay zekâ çevrimdışı çalışmaz.
+- Ücretsiz, yerel kaynaklar; ilk yüklemede PDF/DOCX okuyucuları indirilmez, gerekince aynı siteden yüklenir.
+
+## Dosyalar
+
+PDF (metin içeren), DOCX, TXT, MD, CSV ve JSON. En fazla üç dosya, dosya başına 5 MB, toplam 10 MB. Bir dosyadan 24.000, toplam 48.000 karakter metin alınır. PDF’in en fazla ilk 30 sayfası okunur. Uzun belgeler açıkça kısmi gösterilir; modele yalnızca seçilen alıntılar gönderilir.
+
+Dosyanın kendisi ve çıkarılan tam metin cihaz belleğinde kalır; sohbet kaydında dosya adları yer alır. Seçili metin bölümleri yanıt istendiğinde Groq’a gönderilir. Sayfa yenilenirse dosyayı tekrar eklemek gerekir. Taranmış PDF, resim OCR’ı, parola korumalı belgeler, ses/video ve eski `.doc` desteklenmez. Yüklenen çocuk bilgileri veya başka kişisel veriler kullanılmamalıdır.
+
+## Bilimsel doğruluk ve güvenlik
+
+Yanıtların tamamının doğru olduğu garanti edilmez. Sabit kaynak notları NASA, NIST, American Chemical Society ve Google Developers sayfalarından editoryal olarak hazırlanmıştır. Kaynak seçkisi dar kapsamlıdır; canlı web araması veya her cevabın otomatik teyidi değildir. İlgili referans varsa modele aktarılır; kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir. Model, doğrulanamayan ayrıntıları belirtmeye ve kaynak/DOI uydurmamaya yönlendirilir.
+
+Bilimsel bilgi, varsayım, gözlem ve öneri ayrılmalı; hesaplarda birimler gösterilmelidir. Deneylerde yetişkin gözetimi, yaşa uygunluk ve ilgili malzeme riskleri istenir. Tehlikeli deneyler yerine düşük riskli alternatif veya simülasyon önerilir. Her çıktı öğretmen/gönüllü kontrolünden geçmelidir. Yalnızca isteme eklenen talimatlar bütün hataları engellemez.
+
+İLKYAR’ın resmi [tanıtım sayfası](https://ilkyar.org.tr/tanitim/) ve [logosu](https://ilkyar.org.tr/wp-content/uploads/2021/06/logo.png) kullanılmıştır. Logo sahipliği İLKYAR’a aittir; bu ürün resmi temsil veya kurumsal onay iddiasında bulunmaz. BALKIZ ve üçüncü taraf okuyucu lisansları korunmuştur.
 
 ## Yerelde çalıştırma
 
-```bash
-npm i -g vercel
-cd balkiz
-vercel dev
+Node.js 22 veya üstü:
+
+```sh
+cp .env.example .env.local
+# .env.local içine kendi GROQ_API_KEY değerini ekle.
+npm install
+npm run dev
 ```
 
-Tarayıcıda `http://localhost:3000` aç.
+`http://127.0.0.1:3000` adresini aç. Vercel build’i tarayıcı varlıklarını `public/` altında üretir; API anahtarı bu klasöre yazılmaz. `api/chat.js` ayrı sunucu fonksiyonudur.
 
+PDF.js ve fflate bu pakette lisanslarıyla hazırdır. Güncellemeleri yeniden kopyalamak için `npm run vendor` kullanılabilir. Kontrol komutları `npm test` ve `npm run check`; gerçek cihaz, Vercel ve gerçek Groq denemelerini kullanıcı yapacaktır.
