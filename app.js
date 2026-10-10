@@ -1,8 +1,8 @@
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.2.0';
-import { TEMPLATES } from './lib/templates.js?v=2.2.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.2.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.2.0';
-import { readSSE } from './lib/sse.js?v=2.2.0';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.2.1';
+import { TEMPLATES } from './lib/templates.js?v=2.2.1';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.2.1';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.2.1';
+import { readSSE } from './lib/sse.js?v=2.2.1';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';

@@ -1,5 +1,5 @@
-const VERSION = 'balkiz-shell-v2.2.0';
-const SHELL = ['/', '/index.html', '/styles.css?v=2.2.0', '/app.js?v=2.2.0', '/lib/knowledge.js?v=2.2.0', '/lib/science-sources.js?v=2.2.0', '/lib/guide-catalog.js?v=2.2.0', '/lib/retrieval.js?v=2.2.0', '/lib/advanced-templates.js?v=2.2.0', '/lib/activities.js?v=2.2.0', '/lib/templates.js?v=2.2.0', '/lib/expanded-templates.js?v=2.2.0', '/lib/files.js?v=2.2.0', '/lib/sse.js?v=2.2.0', '/assets/balkiz-mark.svg', '/assets/ilkyar-logo.png', '/manifest.webmanifest', '/vendor/marked.umd.js'];
+const VERSION = 'balkiz-shell-v2.2.1';
+const SHELL = ['/', '/index.html', '/styles.css?v=2.2.1', '/app.js?v=2.2.1', '/lib/knowledge.js?v=2.2.1', '/lib/science-sources.js', '/lib/guide-catalog.js', '/lib/retrieval.js', '/lib/advanced-templates.js?v=2.2.1', '/lib/activities.js?v=2.2.1', '/lib/templates.js?v=2.2.1', '/lib/expanded-templates.js?v=2.2.1', '/lib/files.js?v=2.2.1', '/lib/sse.js?v=2.2.1', '/assets/balkiz-mark.svg', '/assets/ilkyar-logo.png', '/manifest.webmanifest', '/vendor/marked.umd.js'];
 const SHELL_PATHS = new Set(SHELL.map(path => path.split('?')[0]));
 self.addEventListener('install', event => event.waitUntil((async () => {
   await (await caches.open(VERSION)).addAll(SHELL);
