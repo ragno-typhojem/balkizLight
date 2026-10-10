@@ -8,9 +8,9 @@
   <title>BALKIZ Light · Etkinlik atölyesi</title>
   <link rel="icon" href="/assets/balkiz-mark.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/styles.css?v=2.1.0">
+  <link rel="stylesheet" href="/styles.css?v=2.2.0">
   <script src="/vendor/marked.umd.js" defer></script>
-  <script type="module" src="/app.js?v=2.1.0"></script>
+  <script type="module" src="/app.js?v=2.2.0"></script>
 </head>
 <body>
   <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -35,7 +35,7 @@
     <aside class="sidebar" id="sidebar" aria-label="Sohbetler ve araçlar">
       <div class="brand"><img src="/assets/balkiz-mark.svg" alt="BALKIZ" width="40" height="40"><div><strong>BALKIZ <span>Light</span></strong><small>Gönüllünün fikir atölyesi</small></div><button class="icon-button sidebar-close" id="close-menu" aria-label="Menüyü kapat"><svg><use href="#i-close"/></svg></button></div>
       <button class="new-button" id="new-chat"><svg><use href="#i-plus"/></svg> Yeni çalışma</button>
-      <button class="nav-button" id="templates-open"><svg><use href="#i-book"/></svg> Etkinlik kütüphanesi <span class="tiny-badge" id="template-count">25</span></button>
+      <button class="nav-button" id="templates-open"><svg><use href="#i-book"/></svg> Etkinlik kütüphanesi <span class="tiny-badge" id="template-count">31</span></button>
       <div class="section-label">ÇALIŞMALARIN <span id="chat-count">0</span></div>
       <label class="sr-only" for="history-search">Çalışmalarda ara</label><input type="search" id="history-search" class="search-input" placeholder="Çalışmalarda ara…" autocomplete="off">
       <nav class="history" id="history" aria-label="Kaydedilmiş çalışmalar"></nav>
@@ -73,6 +73,7 @@
           <form id="settings-form" class="settings-form">
             <label for="domain">Etkinlik alanı</label><select id="domain"><option value="general">Birlikte seçelim</option></select>
             <label for="age">Yaş grubu</label><select id="age"><option value="6–8">6–8 yaş</option><option value="9–12" selected>9–12 yaş</option><option value="13–15">13–15 yaş</option><option value="16+">16 yaş ve üzeri</option></select>
+            <label for="difficulty">Bilimsel derinlik</label><select id="difficulty"><option value="intro">Başlangıç · keşfet</option><option value="intermediate">Orta · karşılaştır ve ölç</option><option value="advanced">İleri · model, grafik ve belirsizlik</option></select>
             <div class="field-pair"><div><label for="duration">Süre · dakika</label><input id="duration" type="number" min="10" max="180" step="5" value="40"></div><div><label for="participants">Katılımcı</label><input id="participants" type="number" min="1" max="200" value="20"></div></div>
             <label for="materials">Elindeki malzemeler <span>isteğe bağlı</span></label><textarea id="materials" rows="3" maxlength="600" placeholder="Kâğıt, ip, renkli kalemler…"></textarea>
             <label for="detail">Yanıt uzunluğu</label><select id="detail"><option value="auto">Otomatik</option><option value="short">Kısa</option><option value="detailed">Ayrıntılı</option></select>
@@ -90,7 +91,7 @@
   <input type="file" id="import-file" accept=".json" hidden>
   <dialog id="library-dialog" class="library-dialog" aria-labelledby="library-title">
     <div class="dialog-top"><div><span class="eyebrow">BİR FİKİRLE BAŞLA</span><h2 id="library-title">Etkinlik kütüphanesi</h2></div><button class="icon-button dialog-close" aria-label="Kütüphaneyi kapat"><svg><use href="#i-close"/></svg></button></div>
-    <p class="dialog-description">Bilimden sanata, 22 başlıkta başlangıç taslakları. Aç, indir; istersen bir mesajla BALKIZ ile geliştir. İlk yüklemeden sonra çevrimdışı da açılır.</p>
+    <p class="dialog-description">Bilimden sanata başlangıç ve ileri düzey taslaklar. Aç, indir; bir mesajla yeni keşif soruları ve varyasyonlar ekle. İlk yüklemeden sonra taslaklar çevrimdışı da açılır; dış kaynak ve simülasyonlar internet gerektirebilir.</p>
     <div class="library-filters">
       <div><label for="template-search">Taslak ara</label><input type="search" id="template-search" placeholder="Başlık, fikir veya malzeme…" autocomplete="off" maxlength="100"></div>
       <div><label for="template-category">Etkinlik başlığı</label><select id="template-category"><option value="all">Tüm başlıklar</option></select></div>
@@ -98,7 +99,19 @@
     <p id="template-results" class="library-results" role="status" aria-live="polite"></p>
     <div id="template-list" class="template-list"></div>
   </dialog>
-  <dialog id="sources-dialog" class="library-dialog" aria-labelledby="sources-title"><div class="dialog-top"><div><span class="eyebrow">BİLİMİ KAYNAĞINDAN OKU</span><h2 id="sources-title">Başvuru kaynakları</h2></div><button class="icon-button dialog-close" aria-label="Kaynakları kapat"><svg><use href="#i-close"/></svg></button></div><p class="dialog-description">Küçük bir editoryal kaynak seçkisi. Canlı web araması veya her yanıtın doğrulandığı anlamına gelmez.</p><div id="source-list" class="source-list"></div></dialog>
+  <dialog id="sources-dialog" class="library-dialog" aria-labelledby="sources-title">
+    <div class="dialog-top"><div><span class="eyebrow">KEŞFİ BİR ADIM İLERİ TAŞI</span><h2 id="sources-title">Kaynaklar ve kılavuzlar</h2></div><button class="icon-button dialog-close" aria-label="Kaynakları kapat"><svg><use href="#i-close"/></svg></button></div>
+    <p class="dialog-description">Etkinliğini seç, yeni sorular ve varyasyonlarla geliştir. Bilimsel dayanaklar, simülasyonlar ve paylaşılan kılavuzlar ayrı gösterilir. Bu yerel seçki canlı arama değildir; kılavuzlar bilimsel doğruluk veya uygulama güvenliği garantisi vermez.</p>
+    <div class="library-filters source-filters">
+      <div><label for="source-search">Konu veya etkinlik ara</label><input id="source-search" type="search" maxlength="120" autocomplete="off" placeholder="Newton beşiği, polarizasyon, pH…"></div>
+      <div><label for="source-kind">Kaynak türü</label><select id="source-kind"><option value="all">Tüm kaynaklar</option><option value="reference">Bilimsel dayanak</option><option value="simulation">Simülasyon</option><option value="guide">Etkinlik kılavuzu / ek</option></select></div>
+      <div><label for="source-category">Etkinlik alanı</label><select id="source-category"><option value="all">Tüm alanlar</option></select></div>
+    </div>
+    <p id="source-results" class="library-results" role="status" aria-live="polite"></p>
+    <div id="source-list" class="source-list"></div>
+    <button id="source-more" class="source-more" hidden>Daha fazla kaynak göster</button>
+    <p class="source-date">Yerel notları aramak kota kullanmaz. Dış bağlantıların erişimi ve izinleri değişebilir. Kılavuzların asılları Drive’da kalır.</p>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div id="announce" class="sr-only" role="status" aria-live="polite"></div>
 </body>

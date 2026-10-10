@@ -1,0 +1,9 @@
+node_modules/
+public/
+.vercel/
+.env*
+!.env.example
+.DS_Store
+playwright-report/
+test-results/
+npm-cache/

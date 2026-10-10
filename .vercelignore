@@ -1,0 +1,11 @@
+.git/
+node_modules/
+tests/
+test-results/
+playwright-report/
+.env*
+README.md
+DELIVERY.md
+SOURCE-NOTES.md
+private/
+.DS_Store

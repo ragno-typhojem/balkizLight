@@ -1,12 +1,12 @@
-import { SOURCES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.1.0';
-import { TEMPLATES } from './lib/templates.js?v=2.1.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.1.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.1.0';
-import { readSSE } from './lib/sse.js?v=2.1.0';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.2.0';
+import { TEMPLATES } from './lib/templates.js?v=2.2.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.2.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.2.0';
+import { readSSE } from './lib/sse.js?v=2.2.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
-const DEFAULTS = { domain: 'general', task: 'plan', detail: 'auto', age: '9–12', duration: 40, participants: 20, materials: '' };
+const DEFAULTS = { domain: 'general', task: 'plan', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
 const SETTINGS = Object.keys(DEFAULTS);
 const e = Object.fromEntries(['history', 'thread', 'scroll', 'input', 'send', 'toast', 'sidebar'].map(name => [name, $(`#${name}`)]));
 let chats = {}, active = '', busy = false, readingFiles = false, following = true, saving, toastTimer, streamController;
@@ -64,7 +64,7 @@ function cleanChats(raw) {
       role: message.role, content: message.content.slice(0, 48000),
       status: message.status === 'error' || message.status === 'stopped' || message.status === 'pending' ? 'stopped' : 'done',
       files: Array.isArray(message.files) ? message.files.filter(name => typeof name === 'string').slice(0, 3).map(name => name.slice(0, 120)) : [],
-      meta: message.meta && typeof message.meta === 'object' ? { ...message.meta, sources: SOURCES.filter(source => message.meta.sources?.some?.(ref => ref.id === source.id)).map(source => ({ id: source.id, title: source.title, publisher: source.publisher, url: source.url })) } : null,
+      meta: message.meta && typeof message.meta === 'object' ? { ...message.meta, sources: REFERENCE_LIBRARY.filter(source => message.meta.sources?.some?.(ref => ref.id === source.id)).map(source => ({ id: source.id, title: source.title, publisher: source.publisher, url: source.url, kind: source.kind })) } : null,
     }));
     result[id] = { id, title: String(item.title || 'Yeni çalışma').slice(0, 100), updatedAt: Number(item.updatedAt) || Date.now(), settings: cleanSettings(item.settings), messages };
   }
@@ -157,8 +157,8 @@ function responseMeta(article, meta) {
     const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Taslağın başvuru kaynakları · uygulamadan önce incele' : 'Yanıta eşlik eden başvuru notları · canlı arama yapılmadı'; footer.append(label);
     const links = document.createElement('div'); links.className = 'response-sources';
     for (const ref of meta.sources) {
-      const source = SOURCES.find(source => source.id === ref.id); if (!source) continue;
-      const link = document.createElement('a'); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${source.publisher} · ${source.title}`; links.append(link);
+      const source = REFERENCE_LIBRARY.find(source => source.id === ref.id); if (!source) continue;
+      const link = document.createElement('a'); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${source.kind === 'guide' ? 'Kılavuz' : 'Başvuru'} · ${source.publisher} · ${source.title}`; links.append(link);
     }
     footer.append(links);
   } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
@@ -360,7 +360,7 @@ document.addEventListener('keydown', event => {
 });
 window.addEventListener('resize', () => { closeDrawers(); grow(); });
 $('#templates-open').onclick = () => { if (!canNavigate()) return; closeDrawers(); $('#library-dialog').showModal(); };
-$('#sources-open').onclick = () => { closeDrawers(); $('#sources-dialog').showModal(); };
+$('#sources-open').onclick = () => { closeDrawers(); renderSources(); $('#sources-dialog').showModal(); };
 for (const dialog of document.querySelectorAll('dialog')) {
   dialog.querySelector('.dialog-close').onclick = () => dialog.close();
   dialog.addEventListener('click', event => { if (event.target === dialog) { const rect = dialog.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close(); } });
@@ -371,10 +371,10 @@ function renderTemplates() {
   const list = $('#template-list'); list.replaceChildren();
   $('#template-results').textContent = `${visible.length} / ${TEMPLATES.length} taslak · hazır taslak açmak kota kullanmaz`;
   for (const template of visible) {
-    const card = document.createElement('article'); card.className = 'template-card'; card.innerHTML = `<span class="template-category">${escapeHTML(activityLabel(template.domain))}</span><div class="template-meta">${template.age} yaş · ${template.duration} dakika</div><h3>${escapeHTML(template.title)}</h3><p>${escapeHTML(template.summary)}</p>`;
+    const card = document.createElement('article'); card.className = 'template-card'; card.innerHTML = `<span class="template-category">${escapeHTML(activityLabel(template.domain))}${template.difficulty === 'advanced' ? ' · İleri' : ''}</span><div class="template-meta">${template.age} yaş · ${template.duration} dakika</div><h3>${escapeHTML(template.title)}</h3><p>${escapeHTML(template.summary)}</p>`;
     const button = document.createElement('button'); button.textContent = 'Taslağı aç'; button.setAttribute('aria-label', `${template.title} taslağını aç`); button.onclick = () => {
       if (!canNavigate()) return;
-      $('#library-dialog').close(); const chat = createChat({ ...DEFAULTS, domain: template.domain, age: template.age, duration: template.duration, materials: template.materials || '' }); if (!chat) return;
+      $('#library-dialog').close(); const chat = createChat({ ...DEFAULTS, domain: template.domain, difficulty: template.difficulty || 'intro', age: template.age, duration: template.duration, materials: template.materials || '' }); if (!chat) return;
       chat.title = template.title; chat.messages.push({ role: 'assistant', content: template.content, status: 'done', meta: { sources: SOURCES.filter(source => template.sourceIds?.includes(source.id)).map(source => ({ id: source.id })), profile: 'template' } });
       save(); render(); toast('Taslak açıldı. İndirip kullanabilir veya bir mesajla geliştirebilirsin.');
     }; card.append(button); list.append(card);
@@ -386,10 +386,47 @@ function renderTemplates() {
 $('#template-search').addEventListener('input', renderTemplates);
 $('#template-category').addEventListener('change', renderTemplates);
 renderTemplates();
-for (const source of SOURCES) {
-  const link = document.createElement('a'); link.className = 'source-entry'; link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.innerHTML = `<b>${escapeHTML(source.title)} ↗</b><span>${escapeHTML(source.publisher)}</span>`; $('#source-list').append(link);
+$('#source-category').replaceChildren(new Option('Tüm alanlar', 'all'), ...ACTIVITY_AREAS.map(area => new Option(area.label, area.id)));
+let sourceLimit = 24;
+function sourceLabel(source) { return source.kind === 'guide' ? 'Etkinlik kılavuzu / ek' : source.kind === 'simulation' ? 'Simülasyon' : source.kind === 'institution' ? 'Kurum' : 'Bilimsel dayanak'; }
+function renderSources(reset = true) {
+  if (reset) sourceLimit = 24;
+  const words = normalize($('#source-search').value.trim()).split(/\s+/).filter(Boolean);
+  const kind = $('#source-kind').value, category = $('#source-category').value;
+  const visible = REFERENCE_LIBRARY.filter(source => (kind === 'all' || source.kind === kind) && (category === 'all' || source.domain === category) && words.every(word => normalize(`${source.title} ${source.publisher} ${activityLabel(source.domain)} ${(source.keywords || []).join(' ')} ${source.facts || ''} ${source.goal || ''} ${source.development || ''} ${source.materials || ''}`).includes(word)));
+  $('#source-results').textContent = `${visible.length} sonuç · ${SOURCES.length} başvuru kaynağı, ${GUIDES.length} kılavuz/ek · katalog ${KNOWLEDGE_VERSION}`;
+  const list = $('#source-list'); list.replaceChildren();
+  for (const source of visible.slice(0, sourceLimit)) {
+    const card = document.createElement('article'); card.className = 'source-card';
+    card.innerHTML = `<div class="source-card-meta">${escapeHTML(sourceLabel(source))} · ${escapeHTML(activityLabel(source.domain))}</div><a class="source-entry" href="${escapeHTML(source.url)}" target="_blank" rel="noopener noreferrer"><b>${escapeHTML(source.title)} ↗</b><span>${escapeHTML(source.publisher)}</span></a><p>${escapeHTML(source.kind === 'guide' ? source.goal || source.scope : source.facts)}</p>`;
+    if (source.kind === 'guide') {
+      const idea = document.createElement('p'); idea.textContent = `Geliştirme fikri: ${source.development}`; card.append(idea);
+      const scope = document.createElement('p'); scope.className = 'source-date'; scope.textContent = source.scope; card.append(scope);
+      if (source.warning) { const warning = document.createElement('p'); warning.className = 'source-warning'; warning.textContent = source.warning; card.append(warning); }
+      const links = document.createElement('div'); links.className = 'response-sources';
+      for (const id of source.sourceIds) {
+        const ref = SOURCES.find(item => item.id === id); if (!ref) continue;
+        const link = document.createElement('a'); link.href = ref.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = ref.title; links.append(link);
+      }
+      card.append(links);
+    }
+    const button = document.createElement('button'); button.className = 'source-develop'; button.textContent = source.kind === 'guide' ? 'Bu etkinliği geliştir' : 'Bu konuyla etkinlik oluştur';
+    button.onclick = () => {
+      if (!canNavigate()) return;
+      const settings = getSettings(); $('#sources-dialog').close();
+      const chat = createChat({ ...settings, task: 'plan', domain: source.domain, materials: source.materials || settings.materials }); if (!chat) return;
+      chat.title = source.title; save(); render();
+      e.input.value = source.kind === 'guide' ? `“${source.title}” etkinliğini yeni keşif soruları, farklı varyasyonlar ve seçtiğim bilimsel derinliğe uygun bir akışla geliştir.` : `“${source.title}” konusuyla seçtiğim yaş ve bilimsel derinliğe uygun yeni bir etkinlik oluştur.`;
+      draftByChat.set(chat.id, e.input.value); grow(); e.input.focus();
+    };
+    const reviewed = document.createElement('p'); reviewed.className = 'source-date'; reviewed.textContent = `Not tarihi: ${source.reviewed || KNOWLEDGE_VERSION}`; card.append(reviewed);
+    card.append(button); list.append(card);
+  }
+  $('#source-more').hidden = visible.length <= sourceLimit;
+  if (!visible.length) { const empty = document.createElement('p'); empty.textContent = 'Bu aramada kaynak bulunamadı. Konuyu veya filtreleri değiştir.'; list.append(empty); }
 }
-const date = document.createElement('p'); date.className = 'source-date'; date.textContent = `Başvuru notlarının son editoryal kontrolü: ${KNOWLEDGE_VERSION}`; $('#source-list').append(date);
+for (const name of ['source-search', 'source-kind', 'source-category']) $(`#${name}`).addEventListener(name === 'source-search' ? 'input' : 'change', () => renderSources());
+$('#source-more').onclick = () => { sourceLimit += 24; renderSources(false); };
 window.addEventListener('online', () => { connection(); grow(); });
 window.addEventListener('offline', () => { connection(); grow(); toast('Çevrimdışı kütüphane ve kaydedilmiş çalışmalar kullanılabilir.'); });
 window.addEventListener('pagehide', () => save(true));
