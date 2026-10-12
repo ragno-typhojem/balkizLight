@@ -39,3 +39,28 @@ test('a follow-up does not inherit the old plan mode; explicit guides preserve f
   assert.equal(prepared.intent, 'guide');
   assert.match(prepared.payload.messages[1].content, /Branş.*Öğrenci Seviyesi.*Etkinliğin Çocuklara Anlatımı/s);
 });
+
+test('another experiment switches away from the previous guide even in guide mode', () => {
+  for (const content of ['Başka deney', 'Farklı bir deney öner', 'Yeni bir deney istiyorum', 'Başka', 'Başka bir deneyin kılavuzunu yaz']) {
+    const prepared = prepareRequest(input([
+      { role: 'user', content: '9 yaş için sirke ve karbonat deneyi' },
+      { role: 'assistant', content: '# Sirke ve karbonat\nAçık kapta gaz çıkışını gözlemle.' },
+      { role: 'user', content },
+    ], { task: 'guide' }));
+    assert.equal(prepared.novel, true);
+    assert.doesNotMatch(prepared.payload.messages[1].content, /Aynı etkinliğe yalnız/);
+    assert.match(prepared.payload.messages[1].content, /YENİ DENEY/);
+    assert.ok(prepared.sources.every(source => source.kind !== 'guide'));
+    assert.ok(prepared.payload.messages.some(message => message.content.includes('tekrar etme')));
+  }
+});
+test('small follow-ups carry smaller context while preserving the current message', () => {
+  const prepared = prepareRequest(input([
+    { role: 'user', content: 'Sarkaç periyodu' },
+    { role: 'assistant', content: 'Sarkaç uzunluğu ve periyodu. '.repeat(500) },
+    { role: 'user', content: 'İpi uzatırsam ne olur?' },
+  ]), true);
+  assert.ok(prepared.sources.length <= 1);
+  assert.ok(prepared.payload.messages.some(message => message.role === 'assistant'));
+  assert.equal(prepared.payload.messages.at(-1).content, 'İpi uzatırsam ne olur?');
+});

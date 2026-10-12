@@ -1,8 +1,8 @@
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.3.0';
-import { TEMPLATES } from './lib/templates.js?v=2.3.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.3.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.3.0';
-import { readSSE } from './lib/sse.js?v=2.3.0';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.3.1';
+import { TEMPLATES } from './lib/templates.js?v=2.3.1';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.3.1';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.3.1';
+import { readSSE } from './lib/sse.js?v=2.3.1';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -164,7 +164,7 @@ function responseMeta(article, meta) {
   } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
   const note = document.createElement('div'); note.textContent = DISCLAIMER; footer.append(note);
   if (meta.usage) { const usage = document.createElement('div'); usage.textContent = `Bu yanıt: ${meta.usage.charged} token · önbellekten ${meta.usage.cached} token`; footer.append(usage); }
-  if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? 'Sohbet bağı korunarak önceki metinden kısa bölümler kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); footer.append(limits); }
+  if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? meta.novel ? 'Önceki öneriler tekrar edilmemesi için kısa alıntılarla taşındı.' : 'Sohbet bağı korunarak önceki metinden kısa bölümler kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); footer.append(limits); }
 }
 function responseControls(article, message) {
   const controls = article.querySelector('.response-controls'); controls.replaceChildren();
@@ -173,7 +173,7 @@ function responseControls(article, message) {
   };
   const download = document.createElement('button'); download.innerHTML = `${icon('down')} İndir`; download.onclick = () => downloadBlob(`${message.content}\n\n---\n${DISCLAIMER}`, 'balkiz-etkinlik.md', 'text/markdown;charset=utf-8');
   controls.append(copy, download);
-  for (const [label, prompt] of [['Bir adım ileri', 'Bu etkinliği bir adım ileri taşı: yeni bir araştırma sorusu ve bunu sınayabileceğimiz düşük riskli bir deney öner. Tüm planı tekrar yazma.'], ['Daha az malzeme', 'Aynı etkinliği daha az malzemeyle nasıl uygulayabiliriz? Yalnız değişiklikleri ve ilgili güvenliği yaz.'], ['Kılavuz oluştur', 'Bu konuşmada geliştirdiğimiz etkinliği seçili kılavuz formatında birleştir. Son değişiklikleri koru.']]) {
+  for (const [label, prompt] of [['Farklı deney', 'Önceki deneyleri tekrarlamadan, farklı bir araştırma sorusu ve farklı düzenek içeren başka bir deney öner. Aynı yaş ve süreyi koru.'], ['Bir adım ileri', 'Bu etkinliği bir adım ileri taşı: yeni bir araştırma sorusu ve bunu sınayabileceğimiz düşük riskli bir deney öner. Tüm planı tekrar yazma.'], ['Daha az malzeme', 'Aynı etkinliği daha az malzemeyle nasıl uygulayabiliriz? Yalnız değişiklikleri ve ilgili güvenliği yaz.'], ['Kılavuz oluştur', 'Bu konuşmada geliştirdiğimiz etkinliği seçili kılavuz formatında birleştir. Son değişiklikleri koru.']]) {
     const button = document.createElement('button'); button.textContent = label;
     button.onclick = () => { if (!canNavigate()) return; e.input.value = prompt; draftByChat.set(active, prompt); grow(); e.input.focus(); };
     controls.append(button);
@@ -217,10 +217,12 @@ $('#settings-form').onsubmit = event => event.preventDefault();
 
 function setCooldown(seconds) {
   cooldownUntil = Date.now() + seconds * 1000; clearInterval(retryInterval);
+  const showWait = () => { const secondsLeft = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)); $('#mode-status').textContent = secondsLeft ? `Kota bekleniyor · ${secondsLeft} sn · taslakları ücretsiz açabilirsin` : 'Hazır · ekonomik'; };
+  showWait();
   retryInterval = setInterval(() => {
     const remaining = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
     document.querySelectorAll('.retry-button').forEach(button => { button.disabled = remaining > 0 || busy; button.textContent = remaining ? `${remaining} sn sonra tekrar deneyebilirsin` : 'Tekrar dene'; });
-    grow(); if (!remaining) { clearInterval(retryInterval); retryInterval = null; }
+    showWait(); grow(); if (!remaining) { clearInterval(retryInterval); retryInterval = null; }
   }, 500);
 }
 function requestMessages(messages) {
@@ -267,7 +269,7 @@ async function send(retry = false) {
       const event = JSON.parse(raw);
       if (event.meta) {
         answer.meta = event.meta; responseMeta(article, event.meta);
-        $('#mode-status').textContent = event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.profile === 'compact' ? 'Yoğunluk için kısa yanıt' : 'Otomatik · ekonomik';
+        $('#mode-status').textContent = event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.novel ? 'Yeni deney · kısa fikir' : event.meta.profile === 'compact' ? 'Kalan bütçeye göre kısa yanıt' : 'Otomatik · ekonomik';
       }
       if (event.delta) { answer.content += event.delta; if (!paintTimer) paintTimer = setTimeout(paint, 65); }
       if (event.error) throw new Error(event.error);

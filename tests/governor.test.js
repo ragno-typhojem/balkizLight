@@ -68,3 +68,11 @@ test('actual usage above the estimate is accounted for rather than silently disc
   assert.equal(governor.buckets.get('m:tm').value, 800);
   assert.equal(governor.buckets.get('m:td').value, 800);
 });
+
+test('available capacity counts existing minute reservations rather than the full configured cap', async () => {
+  const governor = new Governor({ env: { GROQ_TPM: '8000', QUOTA_HEADROOM: '1' } });
+  const lease = await governor.reserve('m', 5000, 'client');
+  assert.equal(governor.availableTokens('m'), 3000);
+  await lease.release(2000);
+  assert.equal(governor.availableTokens('m'), 6000);
+});

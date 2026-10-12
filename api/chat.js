@@ -1,5 +1,5 @@
 import { validateInput, prepareRequest, InputError } from '../lib/policy.js';
-import { Governor, BusyError, parseReset } from '../lib/governor.js';
+import { Governor, BusyError, quotaReset } from '../lib/governor.js';
 import { readSSE, encodeEvent } from '../lib/sse.js';
 import { DISCLAIMER, publicSource } from '../lib/knowledge.js';
 
@@ -64,10 +64,14 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       if (cacheKey) { inFlight.add(cacheKey); lockHeld = true; }
       let prepared = prepareRequest(input, false, env);
       if (governor.pressure(prepared.model) || prepared.estimated > governor.limits.tpm) prepared = prepareRequest(input, true, env);
+      const available = governor.availableTokens(prepared.model);
+      if (available >= 1000 && available < prepared.estimated) {
+        try { prepared = prepareRequest(input, true, env, available); } catch (error) { if (!(error instanceof InputError)) throw error; }
+      }
       try { lease = await governor.reserve(prepared.model, prepared.estimated, client); }
       catch (error) {
-        if (error instanceof BusyError && error.status === 429 && prepared.profile !== 'compact') {
-          prepared = prepareRequest(input, true, env);
+        if (error instanceof BusyError && error.status === 429 && (prepared.profile !== 'compact' || error.availableTokens >= 1000)) {
+          try { prepared = prepareRequest(input, true, env, error.availableTokens ?? governor.availableTokens(prepared.model)); } catch (packingError) { if (packingError instanceof InputError) throw error; throw packingError; }
           lease = await governor.reserve(prepared.model, prepared.estimated, client);
         } else throw error;
       }
@@ -96,15 +100,15 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
         controller.abort(); await finish();
         return json({ error: request.signal.aborted ? 'İstek iptal edildi.' : 'Yanıt süresi aşıldı veya servise ulaşılamadı. Tekrar deneyebilirsin.' }, request.signal.aborted ? 499 : 504);
       }
-      governor.observe(prepared.model, upstream.headers, upstream.status);
+      governor.observe(prepared.model, upstream.headers, upstream.status, prepared.estimated);
       if (!upstream.ok || !upstream.body) {
         await upstream.body?.cancel(); await finish(0);
-        const wait = Math.max(1, Math.ceil(parseReset(upstream.headers.get('retry-after'), 60000) / 1000));
+        const wait = Math.max(1, Math.ceil(quotaReset(upstream.headers, prepared.estimated) / 1000));
         if (upstream.status === 429) return json({ error: 'Ücretsiz yapay zekâ kotası dolu. Bütçe yenilenince tekrar dene.', retryAfter: wait }, 429, { 'Retry-After': String(wait) });
         return json({ error: upstream.status === 401 || upstream.status === 403 ? 'Sunucunun yapay zekâ anahtarı veya model erişimi kontrol edilmeli.' : 'Yapay zekâ servisi yanıt veremedi. Tekrar deneyebilirsin.' }, 502);
       }
       const meta = {
-        profile: prepared.profile, model: prepared.scientific ? 'Bilim odaklı' : 'Hızlı',
+        profile: prepared.profile, novel: prepared.novel, model: prepared.scientific ? 'Bilim odaklı' : 'Hızlı',
         trimmed: prepared.trimmed, partialFiles: prepared.partialFiles,
         sources: prepared.sources.map(publicSource), disclaimer: DISCLAIMER,
         capacity: governor.shared ? 'shared' : 'instance', cached: false,

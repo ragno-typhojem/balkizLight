@@ -105,3 +105,13 @@ Varsayılan görev serbest geliştirme sohbetidir. Fikir üret, deney tasarla, k
 Geniş monitörde çalışma satırı ekran yüksekliğiyle sınırlıdır. Sohbet, ayarlar, geçmiş ve kaynak pencereleri kendi içinde kayar. Mobilde görünür ekran yüksekliği klavyeyle güncellenir; yalnız klavye yüksekliği değiştiğinde açık panel kapanmaz. Çok kısa yatay ekranlarda yazma alanı küçülür.
 
 Standart yanıt düşük reasoning effort kullanır; yalnız ileri düzey, ayrıntılı bilim isteğinde orta düzey kullanılır. Yanıt token üst sınırı görev/uzunluk/yoğunluğa göre seçilir. Tek bir istekte kaynak araması veya ek özetleme model çağrısı yapılmaz. Değişmeyen sistem metni başta tutularak sağlayıcının [otomatik prompt önbelleği](https://console.groq.com/docs/prompt-caching) desteklenir; isabet garanti değildir. Yanıtın yanında sağlayıcı bildirirse kullanılan/önbellekteki token sayısı gösterilir; kurum kotasının tamamını göstermez.
+
+## 2.3.1: farklı deney ve kısa bütçe
+
+“Başka/farklı/yeni deney” mevcut etkinliği düzenleme talimatından ayrılır. Yeni deneyde kılavuz notu/puanlama etkisi kapatılır; önceki öneriler yalnız tekrar edilmemesi için kısa alıntılarla taşınır. Eski belgeler yalnız yeni istek açıkça dosyaya atıf yaparsa eklenir. Konusu belirtilmeyen istekte kullanılmamış bir ilkeyi destekleyen sınırlı kaynak notu seçilebilir; bu, önerinin fiziksel olarak denenmiş olduğunu göstermez. “Farklı deney” düğmesi istek taslağı hazırlar.
+
+Sistem talimatı kısaldı. Normal kısa sohbet en fazla 1600, yoğun mod 1000 karakter geçmiş ve tek 700 karakter bütçeli bilimsel not taşır; yeni deneyde geçmiş 550 karakterle sınırlıdır. Ayrıntılı tam plan daha geniş bağlamı korur. Kalan yerel/sağlayıcı token kapasitesine göre çıktı ve geçmiş küçültülerek rezervasyon denenir. Redis token reddinde bildirilen kalan kapasiteyle bir küçük rezervasyon denemesi yapılabilir; bunun için ikinci bir model çağrısı yapılmaz.
+
+429 için Retry-After önceliklidir; yoksa yetersiz token bütçesinin reset başlığı kullanılır. Günlük istek kotası bittiğinde günlük reset korunur. Hiçbir güvenilir süre yoksa ihtiyatlı dakika fallback'i kalır. Gerçek Groq, paylaşımlı Redis ve IP/gün kotaları kaldırılmadı. Arayüz kalan bekleme süresini gösterir. Detayların kaynağı [Groq limit dokümantasyonudur](https://console.groq.com/docs/rate-limits).
+
+2.3.1 için sözdizimi kontrolü ve build yapıldı. Yeni deney niyeti, tek kaynaklı takip ve kısa reset süresi için regresyon senaryoları eklendi; kullanıcı tercihine uygun olarak otomatik/canlı testler çalıştırılmadı. Gerçek model çıktısının farklılığını ve canlı beklemeyi üretimde ölçmedik.
