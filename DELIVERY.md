@@ -1,13 +1,13 @@
-# Teslim notu · 2.2.0 · 10 Ekim 2026
+# Teslim notu · 2.3.0 · 12 Ekim 2026
 
-Bu sürüm ragno-typhojem/balkizLight reposunun bu çalışma sırasında indirilen main arşivinden hazırlanmıştır. GitHub’a push veya Vercel’e yayın yapılmadı.
+Sohbet bağlamı uzun yanıt, hazır taslak ve başarısız tur sonrasında korunacak biçimde güncellendi. Yeni fikir, deney tasarımı ve kısa takip için her seferinde kılavuz üretme zorunluluğu kaldırıldı. Kılavuzda paylaşılan arşivin başlık düzeni veya araştırma düzeni seçilir. Geri bildirim yalnız istendiğinde üretilir.
 
-BALKIZ’ın varsayılan amacı etkinlik geliştirmektir. Kullanıcı istemedikçe geri bildirim raporu, puanlama veya eleştiri üretmez. Yeni keşif soruları, varyasyonlar, bilimsel derinlik ve uygulanabilir akış sunar. Başlangıç/orta/ileri bilimsel derinlik seçimi eklenmiştir.
+100 başvuru kaynağı, 131 kılavuz/ek ve 31 yerel taslak vardır. Yeni 20 not araştırma yöntemi, mühendislik döngüsü, istatistik, ölçüm belirsizliği, genelleme ve simülasyonları kapsar. Kaynaklar canlı arama değildir; özgün kılavuz dosyaları ve kişisel bilgiler repoya alınmaz.
 
-Paylaşılan arşivden 131 kılavuz ve ek için kısa geliştirme bilgileri ve asıl belge bağlantıları vardır. 80 başvuru kaynağı, kaynak türü/alan/konu araması ve 31 hazır taslak (6 ileri düzey araştırma) bulunur. Kılavuz kartı geliştirme isteği hazırlar; kullanıcı göndermeden yapay zekâ çağrılmaz. Tanıtım klasörü ve edebiyat kitapları kaynak araştırmasının dışındadır. Asıl PDF/Word dosyaları ve kişisel bilgiler pakete alınmamıştır. Görsel/formül çıkarımı tam değildir; 6 ek görsel olarak işaretlenmiştir. Ayrıntılı kapsam ve kaynakça SOURCE-NOTES.md içindedir.
+Kısa takipte iki sınırlı bilimsel not, tam planda en fazla üç not ve bir kılavuz kullanılır. Kısa geçmiş alıntıları ek model çağrısı harcamaz. Yerel/Redis token rezervasyonu doğrulanan kullanımla uzlaştırılır; sağlayıcı cache tokenları düşülür. Bilinmeyen kullanımda ihtiyatlı rezervasyon korunur. Sağlayıcının gerçek kuruluş kotası aşılmaz veya artırılmış sayılmaz.
 
-Kaynak seçimi yerelde yapılır: normal istekte en fazla 4, kısa/yoğun modda 3 bilimsel not ve 1 kısa kılavuz bağlamı. Notların karakter bütçeleri sınırlıdır; kaynaklar için ayrı embedding veya arama servisi kullanılmaz. Dosya alıntıları aynı sınırlı seçimde kaynak eşleştirmesine yardımcı olur. Mevcut kota, iptal, cache ve isteğe bağlı ortak Redis rezervasyonu korunur. Daha çok kaynak ücretsiz kapasiteyi sınırsız hâle getirmez.
+Kaydırma için grid satır yükseklikleri sınırlandı; mobil klavye/visual viewport ve kısa yatay ekran düzeni eklendi. Geçmiş kayıt anahtarı aynı kaldı; eski çalışmalar okunabilir. İlk yeni açılış internet gerektirir.
 
-Vercel’de zorunlu tek gizli değişken GROQ_API_KEY. Model ve kota örnekleri .env.example içindedir; gerçek hesap sınırları kullanılmalıdır. Node.js 22+ ve vercel.json ile kurulur. Paket önceki dosyalarla birlikte güncellenmelidir; yalnızca app.js kopyalamak yeterli değildir.
+JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon senaryoları eklenip güncellendi, ancak kullanıcı önceki isteğinde testleri kendisine bıraktığı için otomatik test, tarayıcı/cihaz ve canlı Groq/Vercel testi çalıştırılmadı. Build gerçek sohbet davranışı veya cihaz görünümü kanıtı değildir.
 
-Bu sürümde kullanıcı isteği doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı. Build dağıtım dosyalarını hazırlamak içindir; çalışma davranışını doğrulamaz. Mobil görünüm, kaynak filtreleri, eski sohbet uyumu, çevrimdışı güncelleme, PDF/DOCX, model yanıtları ve ortak kota denemeleri kullanıcıya bırakıldı.
+GitHub main dalına gönderim bu çalışmanın kapsamındadır. Vercel bağlıysa push dağıtımı tetikleyebilir; başarılı canlı dağıtım ayrıca doğrulanmalıdır. Ortam değişkenleri .env.example içindedir; gerçek API anahtarı pakete veya repoya dahil değildir.

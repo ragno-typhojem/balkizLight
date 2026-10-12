@@ -39,7 +39,7 @@ test('curated retrieval uses word boundaries for short terms and admits missing 
   assert.deepEqual(retrieveSources('yaygın bir hikâye'), []);
   assert.equal(retrieveSources('Ay evreleri')[0].id, 'nasa-moon');
   assert.equal(retrieveSources('Sirke ve karbonat')[0].id, 'acs-reaction');
-  assert.deepEqual(retrieveSources('Kuantum dolanıklık'), []);
+  assert.deepEqual(retrieveSources('QZXVV 987654321'), []);
 });
 test('file excerpts select relevant late sections instead of taking only the beginning', () => {
   const file = { name: 'etkinlik.txt', text: 'Başka konu. '.repeat(1400) + 'Karbondioksit tepkimesi karbonat ve sirke gözlemi.' };

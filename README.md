@@ -25,16 +25,16 @@ Diğer ayarlar `.env.example` içinde. `.env.local` veya gerçek anahtarları re
 
 - Bilim, deney, belge incelemesi ve doğruluk değerlendirmesi `openai/gpt-oss-120b`; basit genel metin işleri `openai/gpt-oss-20b` kullanır.
 - Yoğunlukta bilim modeli korunur; yanıt üst sınırı ve taşınan geçmiş azalır. Güncel kullanıcı mesajı kesilmez. Bütçeye sığmayan istek için açık hata verilir.
-- Son ilgili sohbet turları kullanılır; bütün geçmiş her seferinde gönderilmez. Dosyaların soruyla ilgili küçük metin bölümleri seçilir.
+- Son ilgili mesajlar, son yanıt ve uzun sohbette başlangıç kısıtları kısa alıntılarla korunur; hazır taslak ve kısmi yanıt bağlamı da taşınır. Sıkıştırma için ek model çağrısı yapılmaz; bütün geçmiş her seferinde gönderilmez. Dosyaların soruyla ilgili küçük metin bölümleri seçilir.
 - Token tahmini Türkçe için ihtiyatlı UTF-8 tahminidir; gerçek model tokenizer’ı değildir. Sağlayıcı 429 ve reset başlıkları esas alınır.
 - Dakika/gün istek ve token bütçeleri ayrı tutulur. Günlük kalan istek sayısı, dakikalık limit diye yorumlanmaz.
 - Aynı cihaz oturumu ve istemcinin aynı isteği beş dakika boyunca küçük bir instance önbelleğinden karşılanabilir. Kişisel cevaplar ortak kamu önbelleğine konulmaz. Aynı anda gelen aynı istek yeniden üretilmez.
 - Durdurma ve bağlantı kesilmesi upstream isteğini iptal eder. Yarım yanıtlar ve uzunluk sınırına ulaşan yanıtlar tamamlanmış diye önbelleğe alınmaz.
 - Kuyruk dolunca kaynak tüketen sınırsız bekleme veya otomatik tekrar döngüsü yerine yeniden deneme süresi gösterilir.
 - Varsayılan dört eşzamanlı çağrı ve IP başına dakikada altı istek vardır. Okulun ortak internet bağlantısında aynı IP paylaşılabileceğinden `USER_RPM` ayarı ihtiyaca göre düzenlenebilir.
-- Paylaşımlı modda rezerve edilen token bütçesi ihtiyatlı biçimde korunur; iptal edilen çağrıda kullanım bilinmiyorsa bütçe geri verilmez. Bu, kesin kapasiteyi tahmin üzerinden aşmamaya yardımcı olur.
+- Yerel ve paylaşımlı modda doğrulanan gerçek kullanımla rezervasyon uzlaştırılır. Redis pencere kimlikleri eski yanıtın yeni dakika/gün sayacını azaltmasını önler. Kullanımı bilinmeyen iptal/kopmada rezervasyon korunur; sağlayıcı HTTP hata yanıtında token rezervasyonu bırakılır. Sağlayıcının doğruladığı önbellek tokenları kullanım hesabından düşülür.
 
-Groq limitleri model ve kuruluş bazındadır. 10 Ekim 2026’da [Groq resmi limit tablosunda](https://console.groq.com/docs/rate-limits) GPT-OSS 20B ve 120B için ücretsiz limitler model başına 30 RPM, 1.000 RPD, 8.000 TPM ve 200.000 TPD olarak listelenmiştir. Hesabının kesin sınırları değişebilir. [Groq limitleri](https://console.groq.com/docs/rate-limits) ve [hesap limitleri](https://console.groq.com/settings/limits) üzerinden kontrol et.
+Groq limitleri model ve kuruluş bazındadır. 12 Ekim 2026’da [Groq resmi limit tablosunda](https://console.groq.com/docs/rate-limits) GPT-OSS 20B ve 120B için ücretsiz limitler model başına 30 RPM, 1.000 RPD, 8.000 TPM ve 200.000 TPD olarak listelenmiştir. Hesabının kesin sınırları değişebilir. [Groq limitleri](https://console.groq.com/docs/rate-limits) ve [hesap limitleri](https://console.groq.com/settings/limits) üzerinden kontrol et.
 
 Ücretsiz kullanımın sınırsız veya belirli sayıda kullanıcıyı kesin desteklediği iddia edilmez. Gerçek kapasite ortalama token tüketimine, trafik dağılımına, Groq/Redis/Vercel kotalarına bağlıdır. Aynı Groq kuruluşundaki başka uygulamalar da kotayı tüketebilir. Uygulama ücretsiz planı otomatik olarak seçemez; sağlayıcı hesaplarının ücretsiz planlarda ve harcama sınırlarının uygun olduğundan emin ol.
 
@@ -70,9 +70,9 @@ Dosyanın kendisi ve çıkarılan tam metin cihaz belleğinde kalır; sohbet kay
 
 ## Bilimsel doğruluk ve güvenlik
 
-Yanıtların tamamının doğru olduğu garanti edilmez. 80 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 yeni kaynağın tarihi 10 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
+Yanıtların tamamının doğru olduğu garanti edilmez. 100 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 kaynağın tarihi 10 Ekim, 20 yeni araştırma kaynağının tarihi 12 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
 
-İndeks bir kez hazırlanır; sözcük eşleşmesi ve konu ağırlıklarıyla ilgili notlar seçilir. Model başına normal istekte en fazla 4 bilimsel not (2400 karakter bütçesi), kısa/yoğun modda 3 not (1600 karakter bütçesi) ve en fazla 1 kısa kılavuz bağlamı (1100 karakter) aktarılır. Bağlam için ayrı embedding, arama API’si veya yapay zekâ isteği yapılmaz. Metin bulunduğunda bilimsel iddianın dayanağı ilgili referanstır; kılavuz bir uygulama onayı değildir. Uygulama çalışma sırasında internette canlı araştırma yapmaz. Kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir.
+İndeks bir kez hazırlanır; sözcük eşleşmesi ve konu ağırlıklarıyla ilgili notlar seçilir. Yeni tam planlarda en fazla 3 bilimsel not (1600 karakter) ve 1 kısa kılavuz bağlamı (1100 karakter) aktarılır. Kısa takip sohbetinde en fazla 2 bilimsel not (950 karakter) seçilir; kılavuz bağlamı yeniden eklenmez. Bağlam için ayrı embedding, arama API’si veya yapay zekâ isteği yapılmaz. Metin bulunduğunda bilimsel iddianın dayanağı ilgili referanstır; kılavuz bir uygulama onayı değildir. Uygulama çalışma sırasında internette canlı araştırma yapmaz. Kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir.
 
 Bilimsel bilgi, varsayım, gözlem ve öneri ayrılmalı; hesaplarda birimler gösterilmelidir. Deneylerde yetişkin gözetimi, yaşa uygunluk ve ilgili malzeme riskleri istenir. Tehlikeli deneyler yerine düşük riskli alternatif veya simülasyon önerilir. Her çıktı öğretmen/gönüllü kontrolünden geçmelidir. Yalnızca isteme eklenen talimatlar bütün hataları engellemez.
 
@@ -96,4 +96,12 @@ PDF.js ve fflate bu pakette lisanslarıyla hazırdır. Güncellemeleri yeniden k
 
 ## Bu sürümün teslim sınırı
 
-2.2.0 için otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu paket yayına alınmış bir sürüm değildir.
+2.3.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
+
+## 2.3.0: birlikte geliştirme
+
+Varsayılan görev serbest geliştirme sohbetidir. Fikir üret, deney tasarla, konuyu açıkla ve kılavuz yaz seçenekleri vardır. Kısa takipte aynı etkinliğin yalnız istenen kısmı değiştirilir. Açık son istek önceki menü seçimini geçersiz kılabilir. Kılavuzda arşiv düzeni veya araştırma düzeni seçilir; belirtilen özel belge formatı istemde öncelik alır. “Bir adım ileri”, “Daha az malzeme” ve “Kılavuz oluştur” düğmeleri yalnız mesaj taslağı hazırlar, otomatik çağrı yapmaz. Bilimsel deneyin fiziksel olarak yapıldığı iddia edilmez; model öneri ve tahmin üretir.
+
+Geniş monitörde çalışma satırı ekran yüksekliğiyle sınırlıdır. Sohbet, ayarlar, geçmiş ve kaynak pencereleri kendi içinde kayar. Mobilde görünür ekran yüksekliği klavyeyle güncellenir; yalnız klavye yüksekliği değiştiğinde açık panel kapanmaz. Çok kısa yatay ekranlarda yazma alanı küçülür.
+
+Standart yanıt düşük reasoning effort kullanır; yalnız ileri düzey, ayrıntılı bilim isteğinde orta düzey kullanılır. Yanıt token üst sınırı görev/uzunluk/yoğunluğa göre seçilir. Tek bir istekte kaynak araması veya ek özetleme model çağrısı yapılmaz. Değişmeyen sistem metni başta tutularak sağlayıcının [otomatik prompt önbelleği](https://console.groq.com/docs/prompt-caching) desteklenir; isabet garanti değildir. Yanıtın yanında sağlayıcı bildirirse kullanılan/önbellekteki token sayısı gösterilir; kurum kotasının tamamını göstermez.

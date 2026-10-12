@@ -41,12 +41,30 @@ test('shared store failures fail closed and never send a Groq request', async ()
 test('shared quota reservation sends one atomic operation and expires its lease', async () => {
   const commands = [];
   const governor = new Governor({ env: { UPSTASH_REDIS_REST_URL: 'https://redis.test', UPSTASH_REDIS_REST_TOKEN: 'test' }, fetchImpl: async (url, init) => {
-    commands.push(JSON.parse(init.body)); return Response.json({ result: commands.length === 1 ? [1, 0, 2] : 1 });
+    commands.push(JSON.parse(init.body)); return Response.json({ result: commands.length === 1 ? [1, 0, 2, 'minute-window', 'day-window'] : 1 });
   } });
   const lease = await governor.reserve('m', 900, 'hashed-client');
   assert.equal(lease.pressure, true);
-  assert.equal(commands[0][0], 'EVAL'); assert.equal(commands[0][2], 6);
+  assert.equal(commands[0][0], 'EVAL'); assert.equal(commands[0][2], 8);
   assert.match(RESERVE_SCRIPT, /65000/);
   assert.doesNotMatch(JSON.stringify(commands), /message|content/);
   await lease.release(); await lease.release(); assert.equal(commands.length, 2);
+});
+
+test('known actual usage reconciles shared reservations with their original window IDs', async () => {
+  const commands = [];
+  const governor = new Governor({ env: { UPSTASH_REDIS_REST_URL: 'https://redis.test', UPSTASH_REDIS_REST_TOKEN: 'test' }, fetchImpl: async (_, init) => {
+    commands.push(JSON.parse(init.body)); return Response.json({ result: commands.length === 1 ? [1, 0, 1, 'minute-generation', 'day-generation'] : 1 });
+  } });
+  const lease = await governor.reserve('m', 900, 'client');
+  await lease.release(300); await lease.release(300);
+  assert.equal(commands.length, 2);
+  assert.equal(commands[1][2], 5);
+  assert.deepEqual(commands[1].slice(-3), ['-600', 'minute-generation', 'day-generation']);
+});
+test('actual usage above the estimate is accounted for rather than silently discarded', async () => {
+  const governor = new Governor({ env: { GROQ_TPM: '2000', QUOTA_HEADROOM: '1' } });
+  const lease = await governor.reserve('m', 500, 'client'); await lease.release(800);
+  assert.equal(governor.buckets.get('m:tm').value, 800);
+  assert.equal(governor.buckets.get('m:td').value, 800);
 });

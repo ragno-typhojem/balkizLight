@@ -275,3 +275,17 @@ Bu bağlantılar paylaşılan arşivdeki belgelerin aslına gider. Bilimsel iddi
 ## Teslim sınırı
 
 Bu sürümde otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Paket yayınlanmış değildir. Kaynak notları bilimsel doğruluk veya deney güvenliği garantisi değildir.
+
+## 12 Ekim 2026: araştırma ve deney geliştirme
+
+Özgün Türkçe kısa notlarla 20 yeni başvuru eklendi; toplam 100 kaynak oldu. Kaynak sayısı doğruluk garantisi değildir. Yeni notlar `lib/research-sources.js` içinde asıl sayfa, tür ve kontrol tarihiyle kayıtlıdır.
+
+- [Science Buddies: bilimsel yöntem](https://www.sciencebuddies.org/science-fair-projects/science-fair/steps-of-the-scientific-method), [değişkenler](https://www.sciencebuddies.org/science-fair-projects/science-fair/variables), [hipotez](https://www.sciencebuddies.org/science-fair-projects/science-fair/writing-a-hypothesis), [mühendislik tasarımı](https://www.sciencebuddies.org/science-fair-projects/engineering-design-process/engineering-design-process-steps).
+- [NIST: temel belirsizlik](https://physics.nist.gov/cuu/Uncertainty/basic.html), [A tipi](https://physics.nist.gov/cuu/Uncertainty/typea.html), [B tipi](https://physics.nist.gov/cuu/Uncertainty/typeb.html), [birleşik belirsizlik](https://physics.nist.gov/cuu/Uncertainty/combination.html).
+- [OpenStax: deney tasarımı/etik](https://openstax.org/books/introductory-statistics-2e/pages/1-4-experimental-design-and-ethics), [ölçüm düzeyleri](https://openstax.org/books/introductory-statistics-2e/pages/1-3-frequency-frequency-tables-and-levels-of-measurement), [saçılma](https://openstax.org/books/introductory-statistics-2e/pages/2-7-measures-of-the-spread-of-the-data), [regresyon](https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation), [anlamlı basamaklar](https://openstax.org/books/university-physics-volume-1/pages/1-6-significant-figures), [kuantum modeli](https://openstax.org/books/chemistry-2e/pages/6-3-development-of-quantum-theory), [ekoloji](https://openstax.org/books/biology-2e/pages/44-1-the-scope-of-ecology).
+- [Google: aşırı öğrenme](https://developers.google.com/machine-learning/crash-course/overfitting/overfitting), [veri bölme](https://developers.google.com/machine-learning/crash-course/overfitting/dividing-datasets). Mevcut doğruluk/precision/recall kaynağı tekrar eklenmedi.
+- [PhET: regresyon](https://phet.colorado.edu/en/simulations/least-squares-regression), [enerji](https://phet.colorado.edu/en/simulations/energy-skate-park), [molekül şekilleri](https://phet.colorado.edu/en/simulations/molecule-shapes). Bunlar bilimsel makale veya fiziksel deney sonucu değil, eğitim simülasyonudur.
+
+Kılavuz başlıkları yerel arşivde Denge Deneyi, Yapay Zeka ve Göremediğimiz Canavarlar örneklerinin etiketleri incelenerek ortak düzen hâline getirildi. Eklenen süre, gönüllü hazırlığı, güvenlik ve kaynakça başlıkları ürünün geliştirme ekleridir; bütün orijinal belgelerin birebir şablonu olduğu iddia edilmez.
+
+Kota/önbellek davranışı için [Groq rate limits](https://console.groq.com/docs/rate-limits), [prompt caching](https://console.groq.com/docs/prompt-caching) ve [reasoning](https://console.groq.com/docs/reasoning) dokümantasyonu incelendi. Sağlayıcı cache isabeti garanti değildir ve düşüm işlendikten sonra gerçekleşir; paralel istekler yine 429 alabilir.

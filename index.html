@@ -2,15 +2,15 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
   <meta name="theme-color" content="#175a4c">
   <meta name="description" content="İLKYAR gönüllüleri için bilim etkinliği geliştirme atölyesi. Yaşa uygun planlar, kaynak notları ve güvenlik kontrolü.">
   <title>BALKIZ Light · Etkinlik atölyesi</title>
   <link rel="icon" href="/assets/balkiz-mark.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/styles.css?v=2.2.1">
+  <link rel="stylesheet" href="/styles.css?v=2.3.0">
   <script src="/vendor/marked.umd.js" defer></script>
-  <script type="module" src="/app.js?v=2.2.1"></script>
+  <script type="module" src="/app.js?v=2.3.0"></script>
 </head>
 <body>
   <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -48,7 +48,7 @@
     </aside>
     <main class="main-area">
       <header class="topbar">
-        <div class="topbar-left"><button class="icon-button menu-button" id="menu" aria-label="Çalışmalar menüsünü aç" aria-expanded="false" aria-controls="sidebar"><svg><use href="#i-menu"/></svg></button><img class="mobile-mark" src="/assets/balkiz-mark.svg" alt="BALKIZ" width="32" height="32"><div class="page-title">Etkinlik atölyesi <span>Merakla başlar.</span></div></div>
+        <div class="topbar-left"><button class="icon-button menu-button" id="menu" aria-label="Çalışmalar menüsünü aç" aria-expanded="false" aria-controls="sidebar"><svg><use href="#i-menu"/></svg></button><img class="mobile-mark" src="/assets/balkiz-mark.svg" alt="BALKIZ" width="32" height="32"><div class="page-title">Etkinlik atölyesi <span>Fikirden deneye.</span></div></div>
         <a class="ilkyar-link" href="https://ilkyar.org.tr/" target="_blank" rel="noopener noreferrer" aria-label="İLKYAR Vakfı resmi sitesini aç"><span>Gönüllüler için</span><img src="/assets/ilkyar-logo.png" alt="İLKYAR Vakfı" width="94" height="38"></a>
       </header>
       <div class="workspace">
@@ -61,10 +61,10 @@
             <form class="composer" id="composer">
               <label class="sr-only" for="input">Etkinlik fikrini veya bilim sorunu yaz</label>
               <textarea id="input" rows="2" maxlength="16000" placeholder="Bir fikir, bir soru, bir keşif…" aria-describedby="science-note file-note"></textarea>
-              <div class="composer-toolbar"><div class="composer-options"><button id="attach" class="icon-button" type="button" aria-label="Dosya ekle" title="PDF, DOCX veya metin ekle"><svg><use href="#i-plus"/></svg></button><label class="sr-only" for="task">Çalışma türü</label><select id="task"><option value="plan">Etkinlik planı</option><option value="explain">Konuyu açıkla</option><option value="review">Bilgiyi değerlendir</option><option value="edit">Metni düzenle</option></select><span class="file-note" id="file-note">PDF, DOCX, metin</span></div><button class="send-button" id="send" type="submit" aria-label="Mesajı gönder" disabled><svg><use href="#i-arrow"/></svg></button></div>
+              <div class="composer-toolbar"><div class="composer-options"><button id="attach" class="icon-button" type="button" aria-label="Dosya ekle" title="PDF, DOCX veya metin ekle"><svg><use href="#i-plus"/></svg></button><label class="sr-only" for="task">Çalışma türü</label><select id="task"><option value="auto">Birlikte geliştir</option><option value="ideas">Fikir üret</option><option value="experiment">Deney tasarla</option><option value="guide">Kılavuz yaz</option><option value="explain">Konuyu açıkla</option><option value="review">Bilgiyi değerlendir</option><option value="edit">Metni düzenle</option></select><span class="file-note" id="file-note">PDF, DOCX, metin</span></div><button class="send-button" id="send" type="submit" aria-label="Mesajı gönder" disabled><svg><use href="#i-arrow"/></svg></button></div>
             </form>
             <p class="science-note" id="science-note"><svg><use href="#i-shield"/></svg><span>BALKIZ hata yapabilir. Bilgiyi ve deney güvenliğini bir öğretmenle kontrol et.</span></p>
-            <div class="composer-caption"><span id="save-status">Bu cihazda otomatik kaydedilir</span><span id="mode-status">Otomatik · dengeli</span></div>
+            <div class="composer-caption"><span id="save-status">Bu cihazda otomatik kaydedilir</span><span id="mode-status">Otomatik · ekonomik</span></div>
           </div>
         </section>
         <aside class="context-panel" id="context-panel" aria-label="Etkinlik ayarları">
@@ -76,6 +76,7 @@
             <label for="difficulty">Bilimsel derinlik</label><select id="difficulty"><option value="intro">Başlangıç · keşfet</option><option value="intermediate">Orta · karşılaştır ve ölç</option><option value="advanced">İleri · model, grafik ve belirsizlik</option></select>
             <div class="field-pair"><div><label for="duration">Süre · dakika</label><input id="duration" type="number" min="10" max="180" step="5" value="40"></div><div><label for="participants">Katılımcı</label><input id="participants" type="number" min="1" max="200" value="20"></div></div>
             <label for="materials">Elindeki malzemeler <span>isteğe bağlı</span></label><textarea id="materials" rows="3" maxlength="600" placeholder="Kâğıt, ip, renkli kalemler…"></textarea>
+            <label for="format">Kılavuz formatı</label><select id="format"><option value="ilkyar">Etkinlik arşivi düzeni</option><option value="research">Araştırma / deney düzeni</option></select>
             <label for="detail">Yanıt uzunluğu</label><select id="detail"><option value="auto">Otomatik</option><option value="short">Kısa</option><option value="detailed">Ayrıntılı</option></select>
           </form>
           <div class="context-divider"></div>

@@ -1,12 +1,12 @@
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.2.1';
-import { TEMPLATES } from './lib/templates.js?v=2.2.1';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.2.1';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.2.1';
-import { readSSE } from './lib/sse.js?v=2.2.1';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.3.0';
+import { TEMPLATES } from './lib/templates.js?v=2.3.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.3.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.3.0';
+import { readSSE } from './lib/sse.js?v=2.3.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
-const DEFAULTS = { domain: 'general', task: 'plan', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
+const DEFAULTS = { domain: 'general', task: 'auto', format: 'ilkyar', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
 const SETTINGS = Object.keys(DEFAULTS);
 const e = Object.fromEntries(['history', 'thread', 'scroll', 'input', 'send', 'toast', 'sidebar'].map(name => [name, $(`#${name}`)]));
 let chats = {}, active = '', busy = false, readingFiles = false, following = true, saving, toastTimer, streamController;
@@ -123,7 +123,7 @@ const IDEAS = [
   { icon: 'spark', title: 'Bir etkinlik tasarla', text: 'Bir fikri uygulanabilir bir akışa dönüştür.', query: 'Kolay bulunan malzemelerle merak uyandıran bir bilim etkinliği planla.', task: 'plan', domain: 'science' },
   { icon: 'flask', title: 'Bir deney geliştir', text: 'Gözlemle, sorgula, güvenle keşfet.', query: 'Sirke ve karbonat tepkimesini çocuklara anlatan düşük riskli, açık kapta bir gözlem etkinliği hazırla. Güvenlik ve bilimsel açıklamayı ekle.', task: 'plan', domain: 'chemistry' },
   { icon: 'book', title: 'Bir konuyu açıkla', text: 'Karmaşık bilgiyi çocukların diline çevir.', query: 'Ay’ın evrelerini çocuklara basit bir modelle açıkla. Yaygın yanlış anlamaları ve modelin sınırlarını belirt.', task: 'explain', domain: 'astronomy' },
-  { icon: 'check', title: 'Planını gözden geçir', text: 'Bilimsel dayanağı ve riskleri değerlendir.', query: 'Etkinlik planımı bilimsel doğruluk, yaşa uygunluk, malzeme ve güvenlik açısından değerlendir. Planımı aşağıya ekleyeceğim:', task: 'review', domain: 'science' },
+  { icon: 'check', title: 'Bir adım ileri taşı', text: 'Yeni fikirler, ölçümler ve farklı yollar keşfet.', query: 'Çocukların kendi hipotezlerini kurabileceği üç düşük riskli deney fikri öner. Her fikrin sınanabilir sorusunu, ölçülecek değişkenini ve neden ilginç olduğunu kısaca açıkla.', task: 'ideas', domain: 'science' },
 ];
 function welcome() {
   e.thread.innerHTML = `<div class="welcome"><div class="welcome-kicker"><span class="small-dot"></span> BİRLİKTE ÖĞRENELİM</div><h1>Küçük bir merak,<br><span>büyük bir keşif.</span></h1><p class="welcome-copy">Çocukların sorularından ilham al. Bilimden sanata etkinlik fikrini paylaş; yaşa uygun, anlaşılır ve uygulanabilir bir plan geliştirelim.</p><div class="welcome-grid">${IDEAS.map((idea, index) => `<button class="idea-card" data-idea="${index}"><div class="idea-icon${index % 2 ? ' warm' : ''}">${icon(idea.icon)}</div><span class="card-arrow">↗</span><b>${idea.title}</b><small>${idea.text}</small></button>`).join('')}</div><p class="topic-label">YA DA BİR ALANDAN BAŞLA</p><div class="topic-chips">${[['physics','Fizik / Fen'],['chemistry','Kimya'],['ai','Yapay zekâ'],['astronomy','Astronomi'],['drama','Yaratıcı drama'],['origami','Origami']].map(([domain, title]) => `<button class="topic-chip" data-domain="${domain}" aria-pressed="${$('#domain').value === domain}">${title}</button>`).join('')}</div><button class="welcome-library" data-library>${icon('book')} ${ACTIVITY_AREAS.length} başlıkta ${TEMPLATES.length} hazır taslağa göz at <span>↗</span></button></div>`;
@@ -163,7 +163,8 @@ function responseMeta(article, meta) {
     footer.append(links);
   } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
   const note = document.createElement('div'); note.textContent = DISCLAIMER; footer.append(note);
-  if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? 'Uzun geçmişin yalnızca son ilgili kısmı kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); footer.append(limits); }
+  if (meta.usage) { const usage = document.createElement('div'); usage.textContent = `Bu yanıt: ${meta.usage.charged} token · önbellekten ${meta.usage.cached} token`; footer.append(usage); }
+  if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? 'Sohbet bağı korunarak önceki metinden kısa bölümler kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); footer.append(limits); }
 }
 function responseControls(article, message) {
   const controls = article.querySelector('.response-controls'); controls.replaceChildren();
@@ -172,6 +173,11 @@ function responseControls(article, message) {
   };
   const download = document.createElement('button'); download.innerHTML = `${icon('down')} İndir`; download.onclick = () => downloadBlob(`${message.content}\n\n---\n${DISCLAIMER}`, 'balkiz-etkinlik.md', 'text/markdown;charset=utf-8');
   controls.append(copy, download);
+  for (const [label, prompt] of [['Bir adım ileri', 'Bu etkinliği bir adım ileri taşı: yeni bir araştırma sorusu ve bunu sınayabileceğimiz düşük riskli bir deney öner. Tüm planı tekrar yazma.'], ['Daha az malzeme', 'Aynı etkinliği daha az malzemeyle nasıl uygulayabiliriz? Yalnız değişiklikleri ve ilgili güvenliği yaz.'], ['Kılavuz oluştur', 'Bu konuşmada geliştirdiğimiz etkinliği seçili kılavuz formatında birleştir. Son değişiklikleri koru.']]) {
+    const button = document.createElement('button'); button.textContent = label;
+    button.onclick = () => { if (!canNavigate()) return; e.input.value = prompt; draftByChat.set(active, prompt); grow(); e.input.focus(); };
+    controls.append(button);
+  }
 }
 function render() {
   history(); e.thread.replaceChildren(); const chat = chats[active];
@@ -198,7 +204,7 @@ function connection() {
 function settingsChanged() {
   if (chats[active]) { chats[active].settings = getSettings(); save(); }
   e.thread.querySelectorAll('[data-domain]').forEach(button => button.setAttribute('aria-pressed', button.dataset.domain === $('#domain').value));
-  $('#mode-status').textContent = $('#detail').value === 'auto' ? 'Otomatik · dengeli' : $('#detail').value === 'short' ? 'Kısa yanıt' : 'Ayrıntılı yanıt';
+  $('#mode-status').textContent = $('#detail').value === 'auto' ? 'Otomatik · ekonomik' : $('#detail').value === 'short' ? 'Kısa yanıt' : 'Ayrıntılı yanıt';
 }
 for (const name of SETTINGS) $(`#${name}`).addEventListener('change', settingsChanged);
 e.input.oninput = () => { draftByChat.set(active, e.input.value); grow(); };
@@ -217,6 +223,11 @@ function setCooldown(seconds) {
     grow(); if (!remaining) { clearInterval(retryInterval); retryInterval = null; }
   }, 500);
 }
+function requestMessages(messages) {
+  const usable = messages.filter(message => message.content.trim() && (message.status === 'done' || message.role === 'assistant' && ['stopped', 'error'].includes(message.status)));
+  const selected = usable.length > 60 ? [...usable.slice(0, 2), ...usable.slice(-58)] : usable;
+  return selected.map(({ role, content, status }, index) => ({ role, content: (status !== 'done' ? '[Tamamlanmamış önceki yanıt; eksik adımlar uygulanmamalı.]\n' : '') + (index !== selected.length - 1 && content.length > 15800 ? content.slice(0, 12000) + '\n[…]\n' + content.slice(-3700) : content) }));
+}
 async function send(retry = false) {
   if (busy || readingFiles || Date.now() < cooldownUntil) return;
   if (!navigator.onLine) { toast('Çevrimdışısın. Kütüphanedeki taslakları açıp çalışmalarını okuyabilirsin.'); return; }
@@ -233,7 +244,7 @@ async function send(retry = false) {
     if (chat.messages.length === 1) chat.title = text.replace(/\s+/g, ' ').slice(0, 46);
     chat.settings = getSettings(); chat.updatedAt = Date.now();
     // Original document bytes and extracted text are kept in memory only.
-    payload = { sessionId, settings: chat.settings, attachments: currentFiles.map(({ name, text }) => ({ name, text })), messages: chat.messages.filter(message => message.status === 'done' && message.content.trim()).slice(-60).map(({ role, content }) => ({ role, content: content.slice(0, 16000) })) };
+    payload = { sessionId, settings: chat.settings, attachments: currentFiles.map(({ name, text }) => ({ name, text })), messages: requestMessages(chat.messages) };
     retryPayload = { chatId: active, payload }; e.input.value = ''; draftByChat.delete(active); save(); history(); $('#work-title').textContent = chat.title;
   }
   busy = true; following = true; bottom(); grow(); connection();
@@ -256,11 +267,11 @@ async function send(retry = false) {
       const event = JSON.parse(raw);
       if (event.meta) {
         answer.meta = event.meta; responseMeta(article, event.meta);
-        $('#mode-status').textContent = event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.profile === 'compact' ? 'Yoğunluk için kısa yanıt' : 'Otomatik · dengeli';
+        $('#mode-status').textContent = event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.profile === 'compact' ? 'Yoğunluk için kısa yanıt' : 'Otomatik · ekonomik';
       }
       if (event.delta) { answer.content += event.delta; if (!paintTimer) paintTimer = setTimeout(paint, 65); }
       if (event.error) throw new Error(event.error);
-      if (event.done) { finished = true; if (event.truncated) { answer.meta = { ...answer.meta, truncated: true }; } break; }
+      if (event.done) { if (event.usage) { answer.meta = { ...answer.meta, usage: event.usage }; responseMeta(article, answer.meta); } finished = true; if (event.truncated) { answer.meta = { ...answer.meta, truncated: true }; } break; }
     }
     if (!finished) throw new Error('Bağlantı kesildi; bu yanıt tamamlanmadı.');
     clearTimeout(paintTimer); box.classList.remove('streaming-content'); box.innerHTML = markdown(answer.content);
@@ -358,7 +369,20 @@ document.addEventListener('keydown', event => {
   if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
   else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 });
-window.addEventListener('resize', () => { closeDrawers(); grow(); });
+let lastLayoutWidth = window.innerWidth;
+function fitViewport() {
+  const viewport = window.visualViewport;
+  document.documentElement.style.setProperty('--app-height', `${viewport?.height || window.innerHeight}px`);
+  document.documentElement.style.setProperty('--app-top', `${viewport?.offsetTop || 0}px`);
+  if (following) requestAnimationFrame(bottom);
+}
+window.addEventListener('resize', () => {
+  if (Math.abs(window.innerWidth - lastLayoutWidth) > 50) closeDrawers();
+  lastLayoutWidth = window.innerWidth; grow(); fitViewport();
+});
+window.visualViewport?.addEventListener('resize', fitViewport);
+window.visualViewport?.addEventListener('scroll', fitViewport);
+fitViewport();
 $('#templates-open').onclick = () => { if (!canNavigate()) return; closeDrawers(); $('#library-dialog').showModal(); };
 $('#sources-open').onclick = () => { closeDrawers(); renderSources(); $('#sources-dialog').showModal(); };
 for (const dialog of document.querySelectorAll('dialog')) {

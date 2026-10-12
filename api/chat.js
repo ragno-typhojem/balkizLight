@@ -48,7 +48,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
     const origin = request.headers.get('origin');
     if (origin && origin !== new URL(request.url).origin) return json({ error: 'Bu kaynaktan istek kabul edilmiyor.' }, 403);
     if (!env.GROQ_API_KEY) return json({ error: 'Yapay zekâ henüz yapılandırılmamış. Sunucuda GROQ_API_KEY tanımlanmalı.' }, 503);
-    let lease, controller, cacheKey = '', lockHeld = false;
+    let lease, controller, cacheKey = '', lockHeld = false, upstreamStarted = false;
     try {
       const input = validateInput(await readBody(request));
       const client = await digest(request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown');
@@ -87,6 +87,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       };
       let upstream;
       try {
+        upstreamStarted = true;
         upstream = await fetchImpl(ENDPOINT, {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
           body: JSON.stringify(prepared.payload), signal: controller.signal,
@@ -97,7 +98,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       }
       governor.observe(prepared.model, upstream.headers, upstream.status);
       if (!upstream.ok || !upstream.body) {
-        await upstream.body?.cancel(); await finish();
+        await upstream.body?.cancel(); await finish(0);
         const wait = Math.max(1, Math.ceil(parseReset(upstream.headers.get('retry-after'), 60000) / 1000));
         if (upstream.status === 429) return json({ error: 'Ücretsiz yapay zekâ kotası dolu. Bütçe yenilenince tekrar dene.', retryAfter: wait }, 429, { 'Retry-After': String(wait) });
         return json({ error: upstream.status === 401 || upstream.status === 403 ? 'Sunucunun yapay zekâ anahtarı veya model erişimi kontrol edilmeli.' : 'Yapay zekâ servisi yanıt veremedi. Tekrar deneyebilirsin.' }, 502);
@@ -110,7 +111,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       };
       const stream = new ReadableStream({
         async start(out) {
-          let text = '', usage, done = false, finishReason = '';
+          let text = '', usage, cachedTokens = 0, done = false, finishReason = '';
           const send = event => out.enqueue(encodeEvent(event));
           try {
             send({ meta });
@@ -121,25 +122,29 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
               const delta = data.choices?.[0]?.delta?.content;
               if (typeof delta === 'string') { text += delta; send({ delta }); }
               if (data.choices?.[0]?.finish_reason) finishReason = data.choices[0].finish_reason;
-              if (data.usage?.total_tokens) usage = data.usage.total_tokens;
-              else if (data.x_groq?.usage?.total_tokens) usage = data.x_groq.usage.total_tokens;
+              const reported = data.usage || data.x_groq?.usage;
+              if (Number.isFinite(reported?.total_tokens)) {
+                usage = reported.total_tokens;
+                const cached = reported.prompt_tokens_details?.cached_tokens;
+                cachedTokens = Number.isFinite(cached) ? Math.min(usage, Math.max(0, cached)) : 0;
+              }
               if (text.length > 48000) throw new Error('Yanıt boyutu sınırı aşıldı.');
             }
             if (!done && !finishReason) throw new Error('Bağlantı yanıt tamamlanmadan kesildi.');
             if (!text.trim()) throw new Error('Servis boş yanıt döndürdü. Daha kısa bir istekle tekrar dene.');
             const truncated = finishReason === 'length';
             if (cacheKey && !truncated && !controller.signal.aborted) { cache.set(cacheKey, { text, meta, expires: now() + 300000 }); cleanCache(); }
-            send({ done: true, truncated }); out.close();
+            send({ done: true, truncated, usage: Number.isFinite(usage) ? { total: usage, cached: cachedTokens, charged: usage - cachedTokens } : null }); out.close();
           } catch (error) {
             controller.abort();
             try { send({ error: request.signal.aborted ? 'Yanıt durduruldu.' : error.message || 'Yanıt akışı kesildi.' }); out.close(); } catch { /* client disconnected */ }
-          } finally { await finish(usage); }
+          } finally { await finish(Number.isFinite(usage) ? usage - cachedTokens : undefined); }
         },
         async cancel() { controller.abort(); await finish(); },
       });
       return new Response(stream, { headers: { ...RESPONSE_HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8', 'X-Accel-Buffering': 'no' } });
     } catch (error) {
-      controller?.abort(); await lease?.release(); if (lockHeld) inFlight.delete(cacheKey);
+      controller?.abort(); await lease?.release(upstreamStarted ? undefined : 0); if (lockHeld) inFlight.delete(cacheKey);
       const status = error instanceof InputError || error instanceof BusyError ? error.status : 500;
       const wait = error.retryAfter || 0;
       return json({ error: status === 500 ? 'İstek işlenemedi. Tekrar deneyebilirsin.' : error.message, ...(wait ? { retryAfter: wait } : {}) }, status, wait ? { 'Retry-After': String(wait) } : {});
