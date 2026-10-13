@@ -115,3 +115,15 @@ Sistem talimatı kısaldı. Normal kısa sohbet en fazla 1600, yoğun mod 1000 k
 429 için Retry-After önceliklidir; yoksa yetersiz token bütçesinin reset başlığı kullanılır. Günlük istek kotası bittiğinde günlük reset korunur. Hiçbir güvenilir süre yoksa ihtiyatlı dakika fallback'i kalır. Gerçek Groq, paylaşımlı Redis ve IP/gün kotaları kaldırılmadı. Arayüz kalan bekleme süresini gösterir. Detayların kaynağı [Groq limit dokümantasyonudur](https://console.groq.com/docs/rate-limits).
 
 2.3.1 için sözdizimi kontrolü ve build yapıldı. Yeni deney niyeti, tek kaynaklı takip ve kısa reset süresi için regresyon senaryoları eklendi; kullanıcı tercihine uygun olarak otomatik/canlı testler çalıştırılmadı. Gerçek model çıktısının farklılığını ve canlı beklemeyi üretimde ölçmedik.
+
+## 2.4.0 · Olumsuz istekler ve tamamlanan çıktılar
+
+“Asit baz bulma”, “gıda boyasız” ve “bambaşka ve daha kimyasallarla” ifadeleri örnek konuşmadan ele alındı. Konu/malzeme dışlamaları yalnız kullanıcı mesajlarından çıkarılır; kısa geçmiş penceresine bağlı değildir. Asit–baz, gıda boyası ve kristal etkinliği için tanımlı kurallar vardır; tüm Türkçe ifadeler için tam anlama garantisi değildir. İstenmeyen kaynaklar elenir. Önceki riskli tarifler uygulama dayanağı olarak yeniden taşınmaz.
+
+Bilimsel yanıtlar GPT-OSS modellerinde [Groq strict JSON schema](https://console.groq.com/docs/structured-outputs) ile alınır. Sağlayıcı structured output ile streaming'i birlikte desteklemediği için upstream stream:false kullanılır. Uygulamanın SSE hazırlık olayı hemen başlar; tarif yalnız tamamlanıp kontrol edilince gösterilir. Şema biçimi doğrular, bilimsel doğruluğu garanti etmez.
+
+Deney kartı tablo/HTML yerine kısa alanlardan oluşur: 120–180 kelime, 3–5 adım ve ilgili güvenlik notları. Tamamlanma payı deney kartında normal 1800, yoğun mod 1400 tokendır; şema maliyeti rezervasyona dahildir. Kesilmiş, bozuk veya tanımlı dışlama/risk kontrollerini geçmeyen tarif cache'e alınmaz ve gösterilmez. Otomatik ikinci model çağrısı yoktur. Kontroller kapsamlı kimyasal risk değerlendirmesi değildir; öğretmen kontrolü ve ön deneme gerekir.
+
+Eldeki kimyasallar bilinmeden açık laboratuvar isteğinde ad/etiketli derişim/uygulama ortamı soran yerel bir netleştirme sunulabilir. Bu soru API anahtarı ve model çağrısı gerektirmez. Eski uzunluk sınırında kesilen tarifler ekranda yeniden gösterilmez; kayıtlar silinmez. Kullanıcının gönderdiği sohbetin tamamı repoya aktarılmaz.
+
+[ACS madde kimliği](https://www.acs.org/education/whatischemistry/landmarks/bakingpowder.html) ve [pH/göz koruması](https://www.acs.org/middleschoolchemistry/lessonplans/chapter6/lesson8.html) notlarıyla başvuru sayısı 102 oldu. Bu ekler deney onayı değildir.

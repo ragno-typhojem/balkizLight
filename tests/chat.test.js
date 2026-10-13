@@ -4,7 +4,7 @@ import { createHandler } from '../api/chat.js';
 import { readSSE } from '../lib/sse.js';
 
 const request = (body = {}, extra = {}) => new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '1.2.3.4', ...extra.headers }, body: JSON.stringify({ sessionId: 'test-session-1234567', messages: [{ role: 'user', content: 'Ay’ın evrelerini açıkla' }], ...body }), signal: extra.signal });
-const upstream = (text = 'Ay, Güneş ışığını yansıtır.', end = true, finish = 'stop') => new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\r\n\r\ndata: ${JSON.stringify({ choices: [{ delta: {}, finish_reason: finish }], usage: { total_tokens: 500 } })}\r\n\r\n${end ? 'data: [DONE]\r\n\r\n' : ''}`, { headers: { 'Content-Type': 'text/event-stream' } });
+const upstream = (text = 'Ay, Güneş ışığını yansıtır.', end = true, finish = 'stop') => Response.json({ choices: [{ message: { content: JSON.stringify({ reply: text }) }, finish_reason: finish }], usage: { total_tokens: 500 } });
 const events = async response => { const result = []; for await (const raw of readSSE(response.body)) result.push(JSON.parse(raw)); return result; };
 
 test('private repeated requests are cached without another upstream call', async () => {
@@ -34,7 +34,7 @@ test('session cache never shares a private answer with another client', async ()
 });
 test('429 retry-after is forwarded; no hidden retry or quota switching', async () => {
   let calls = 0; const handler = createHandler({ env: { GROQ_API_KEY: 'key' }, fetchImpl: async () => { calls++; return new Response('quota', { status: 429, headers: { 'Retry-After': '7' } }); } });
-  const response = await handler(request()); assert.equal(response.status, 429); assert.equal(response.headers.get('retry-after'), '7'); assert.equal(calls, 1);
+  const response = await handler(request()); const result = await events(response); assert.equal(result.at(-1).retryAfter, 7); assert.equal(calls, 1);
   assert.equal((await handler(request())).status, 429); assert.equal(calls, 1);
 });
 test('invalid inputs, hostile origins and excessive byte bodies spend no quota', async () => {
@@ -46,10 +46,10 @@ test('invalid inputs, hostile origins and excessive byte bodies spend no quota',
 });
 test('partial and length-limited responses remain visibly incomplete and are never cached', async () => {
   let calls = 0; const handler = createHandler({ env: { GROQ_API_KEY: 'key' }, fetchImpl: async () => { calls++; return upstream('Yarım plan', true, 'length'); } });
-  const first = await events(await handler(request())); assert.equal(first.at(-1).truncated, true);
+  const first = await events(await handler(request())); assert.match(first.at(-1).error, /kesildi/); assert.ok(!first.some(event => event.delta));
   await events(await handler(request())); assert.equal(calls, 2);
   const broken = createHandler({ env: { GROQ_API_KEY: 'key' }, fetchImpl: async () => new Response('data: {"choices":[{"delta":{"content":"Yarım"}}]}\n\n') });
-  const result = await events(await broken(request())); assert.match(result.at(-1).error, /tamamlanmadan/);
+  const result = await events(await broken(request())); assert.match(result.at(-1).error, /yarım deney/); assert.ok(!result.some(event => event.delta));
 });
 test('aborting the browser request cancels the provider and releases the slot', async () => {
   let aborted = false; const controller = new AbortController();
@@ -58,7 +58,7 @@ test('aborting the browser request cancels the provider and releases the slot', 
   }) });
   const result = handler(request({}, { signal: controller.signal }));
   await new Promise(done => setTimeout(done, 10)); controller.abort();
-  assert.equal((await result).status, 499); assert.equal(aborted, true);
+  assert.ok((await events(await result)).some(event => event.error)); assert.equal(aborted, true);
 });
 test('burst admission stays bounded while ongoing answers keep streaming', async () => {
   const waits = []; let calls = 0;

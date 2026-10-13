@@ -1,8 +1,8 @@
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.3.1';
-import { TEMPLATES } from './lib/templates.js?v=2.3.1';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.3.1';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.3.1';
-import { readSSE } from './lib/sse.js?v=2.3.1';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.4.0';
+import { TEMPLATES } from './lib/templates.js?v=2.4.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.4.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.4.0';
+import { readSSE } from './lib/sse.js?v=2.4.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -143,15 +143,15 @@ function addMessage(message) {
     content.textContent = message.content;
     if (message.files?.length) { const attached = document.createElement('span'); attached.className = 'attached-names'; attached.textContent = `Ekler: ${message.files.join(', ')}`; content.append(attached); }
   } else {
-    if (message.status === 'pending') content.innerHTML = '<span class="thinking"><span class="thinking-dot"></span> Fikirler bir araya geliyor…</span>';
-    else { content.innerHTML = markdown(message.content); if (message.status === 'stopped') content.insertAdjacentHTML('beforeend', '<p class="error-note">Bu yanıt tamamlanmadı; uygulamadan önce kontrol et.</p>'); }
+    if (message.status === 'pending') content.innerHTML = '<span class="thinking"><span class="thinking-dot"></span> Yanıt hazırlanıyor; deney adımları tamamlanınca gösterilecek…</span>';
+    else { content.innerHTML = message.meta?.truncated ? '<p class="error-note">Bu eski yanıt uzunluk sınırında kesildi. Yarım deney tarifi gösterilmiyor; yeni bir kısa fikir iste.</p>' : markdown(message.content); if (message.status === 'stopped' && !message.meta?.truncated) content.insertAdjacentHTML('beforeend', '<p class="error-note">Bu yanıt tamamlanmadı; uygulamadan önce kontrol et.</p>'); }
     if (message.meta) responseMeta(article, message.meta);
-    if (message.content && message.status !== 'pending') responseControls(article, message);
+    if (message.content && message.status !== 'pending' && !message.meta?.truncated) responseControls(article, message);
   }
   e.thread.append(article); return article;
 }
 function responseMeta(article, meta) {
-  article.querySelector('.response-label').textContent = meta.profile === 'template' ? '· Hazır taslak' : meta.cached ? '· Kaydedilmiş yanıt' : meta.profile === 'compact' ? '· Kısa yanıt' : '';
+  article.querySelector('.response-label').textContent = meta.local ? '· Malzeme bilgisi gerekli' : meta.profile === 'template' ? '· Hazır taslak' : meta.cached ? '· Kaydedilmiş yanıt' : meta.profile === 'compact' ? '· Kısa yanıt' : '';
   const footer = article.querySelector('.response-footer'); footer.hidden = false; footer.replaceChildren();
   if (Array.isArray(meta.sources) && meta.sources.length) {
     const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Taslağın başvuru kaynakları · uygulamadan önce incele' : 'Yanıta eşlik eden başvuru notları · canlı arama yapılmadı'; footer.append(label);
@@ -163,6 +163,8 @@ function responseMeta(article, meta) {
     footer.append(links);
   } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
   const note = document.createElement('div'); note.textContent = DISCLAIMER; footer.append(note);
+  if (meta.excluded?.length) { const constraints = document.createElement('div'); constraints.textContent = `Korunan isteklerin: ${meta.excluded.join(', ')} önerilmesin.`; footer.append(constraints); }
+  if (meta.checked) { const check = document.createElement('div'); check.textContent = 'Biçim, tanımlı dışlamalar ve bazı riskli tarifler kontrol edildi; bilimsel doğruluk onayı değildir.'; footer.append(check); }
   if (meta.usage) { const usage = document.createElement('div'); usage.textContent = `Bu yanıt: ${meta.usage.charged} token · önbellekten ${meta.usage.cached} token`; footer.append(usage); }
   if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? meta.novel ? 'Önceki öneriler tekrar edilmemesi için kısa alıntılarla taşındı.' : 'Sohbet bağı korunarak önceki metinden kısa bölümler kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); footer.append(limits); }
 }
@@ -269,10 +271,10 @@ async function send(retry = false) {
       const event = JSON.parse(raw);
       if (event.meta) {
         answer.meta = event.meta; responseMeta(article, event.meta);
-        $('#mode-status').textContent = event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.novel ? 'Yeni deney · kısa fikir' : event.meta.profile === 'compact' ? 'Kalan bütçeye göre kısa yanıt' : 'Otomatik · ekonomik';
+        $('#mode-status').textContent = event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.novel ? 'Yeni deney · kısıtların korunuyor' : event.meta.profile === 'compact' ? 'Kalan bütçeye göre kısa yanıt' : 'Otomatik · ekonomik';
       }
       if (event.delta) { answer.content += event.delta; if (!paintTimer) paintTimer = setTimeout(paint, 65); }
-      if (event.error) throw new Error(event.error);
+      if (event.error) { if (event.retryAfter) setCooldown(Math.min(86400, Number(event.retryAfter) || 0)); throw new Error(event.error); }
       if (event.done) { if (event.usage) { answer.meta = { ...answer.meta, usage: event.usage }; responseMeta(article, answer.meta); } finished = true; if (event.truncated) { answer.meta = { ...answer.meta, truncated: true }; } break; }
     }
     if (!finished) throw new Error('Bağlantı kesildi; bu yanıt tamamlanmadı.');

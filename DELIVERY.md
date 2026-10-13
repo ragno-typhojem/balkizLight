@@ -1,9 +1,13 @@
-# Teslim notu · 2.3.1 · 12 Ekim 2026
+# Teslim notu · 2.4.0 · 13 Ekim 2026
 
-2.3.0'ın “başka deney” mesajını eski etkinliğe devam olarak yorumlaması düzeltildi. Yeni deney isteği kılavuz alıntısı ve eski konuya devam talimatından ayrıldı. Önceki öneriler kısa tekrar-etme alıntıları olarak taşınır; modelden başka soru/yöntem içeren tek yeni deney kartı istenir. Kaynak bilimsel ilkeye dayanak olur; deneyin yapılmış veya güvenliği onaylanmış olduğu iddia edilmez.
+Gönderilen örnekte olumsuz isteğin yok sayılması, kesilmiş tarifler ve hatalı kimyasal/güvenlik ifadeleri vardı. Bu sürüm tanımlı dışlamaları ayrı işler, ilgili kaynakları eler ve önceki riskli adımları uygulama dayanağı olarak yeniden taşımaz.
 
-Normal kısa takipte tek bilimsel not, daha kısa sistem talimatı ve sınırlı geçmiş kullanılır. Token rezervasyonu önce bilinen kalan bütçeye göre küçültülür. Kaynak sayısı 100, kılavuz/ek 131, yerel taslak 31 olarak kalır. API anahtarı yalnız sunucudadır.
+Bilimsel içerik yapılandırılmış biçimde tamamlanır, ardından yerel biçim/dışlama ve bazı riskli tarif kontrollerinden geçer. Hazırlık bilgisi hemen gönderilir; tarif ancak kontrol sonrasında görünür. Strict schema için upstream streaming kapalıdır. Kısa deney kartları ve reasoning için daha geniş tamamlanma payı kullanılır. Kesilmiş/reddedilmiş yanıtta otomatik ikinci model çağrısı yapılmaz.
 
-Sağlayıcı Retry-After veya ilgili reset başlığı varsa bekleme süresi ondan hesaplanır; süre olmadan veya gerçek dakika/gün/IP kapasitesi dolduğunda limit ve ihtiyatlı fallback korunur. Kota veya beklemenin tamamen kalktığı iddia edilmez.
+Bilinmeyen kimyasallarla açık laboratuvar isteğinde miktar/derişim uydurmak yerine ücretsiz netleştirme sorusu sorulur. Asit–baz ve gıda boyası dışlamaları sonraki kısa turlarda korunur. Kontroller tüm Türkçe ifadeleri, bütün bilimsel yanlışları veya kimyasal riskleri kapsamaz; ön deneme/öğretmen kontrolü gerekir.
 
-Sözdizimi/JSON kontrolü ve build tamamlandı. Regresyon senaryoları yazıldı; kullanıcı tercihi gereği otomatik, cihaz ve canlı Groq/Vercel testleri çalıştırılmadı. Gerçek çıktı tekrarı ve kota performansı canlı ölçülmedi. GitHub main gönderimi bu çalışmanın kapsamındadır.
+102 kaynak, 131 kılavuz/ek ve 31 yerel taslak vardır. API anahtarı, asıl belgeler ve örnek konuşmanın tam metni repoya/pakete alınmaz.
+
+Sözdizimi/JSON kontrolü ve build yapılmıştır. Gönderilen istek sırası, dışlamalar ve yarım/riskli tariflerin gösterilmemesi için yerel senaryolar yazılmıştır. Kullanıcının önceki tercihi gereği otomatik kontroller için yeni tercih soruldu; yanıt gelmeden çalıştırılmaz. Canlı Groq/Vercel/cihaz davranışı doğrulanmamıştır.
+
+GitHub main gönderimi kapsam içindedir. Gerçek sağlayıcı kotaları artırılmaz veya kaldırılmaz.

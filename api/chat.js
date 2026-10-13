@@ -1,3 +1,5 @@
+import { laboratoryClarification, conversationConstraints } from '../lib/constraints.js';
+import { validateAndRender, OutputError } from '../lib/output.js';
 import { validateInput, prepareRequest, InputError } from '../lib/policy.js';
 import { Governor, BusyError, quotaReset } from '../lib/governor.js';
 import { readSSE, encodeEvent } from '../lib/sse.js';
@@ -47,10 +49,19 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
     if (request.method !== 'POST') return json({ error: 'Yalnızca POST destekleniyor.' }, 405, { Allow: 'POST' });
     const origin = request.headers.get('origin');
     if (origin && origin !== new URL(request.url).origin) return json({ error: 'Bu kaynaktan istek kabul edilmiyor.' }, 403);
-    if (!env.GROQ_API_KEY) return json({ error: 'Yapay zekâ henüz yapılandırılmamış. Sunucuda GROQ_API_KEY tanımlanmalı.' }, 503);
     let lease, controller, cacheKey = '', lockHeld = false, upstreamStarted = false;
     try {
       const input = validateInput(await readBody(request));
+      const clarification = laboratoryClarification(input);
+      if (clarification) {
+        const constraints = conversationConstraints(input.messages);
+        const stream = new ReadableStream({ start(out) {
+          out.enqueue(encodeEvent({ meta: { profile: 'clarification', local: true, sources: [], excluded: constraints.labels, disclaimer: DISCLAIMER } }));
+          out.enqueue(encodeEvent({ delta: clarification })); out.enqueue(encodeEvent({ done: true, usage: { total: 0, cached: 0, charged: 0 } })); out.close();
+        } });
+        return new Response(stream, { headers: { ...RESPONSE_HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8' } });
+      }
+      if (!env.GROQ_API_KEY) return json({ error: 'Yapay zekâ henüz yapılandırılmamış. Sunucuda GROQ_API_KEY tanımlanmalı.' }, 503);
       const client = await digest(request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown');
       cleanCache();
       cacheKey = input.sessionId ? await digest(`${client}:${JSON.stringify(input)}`) : '';
@@ -89,6 +100,56 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
         if (lockHeld) { inFlight.delete(cacheKey); lockHeld = false; }
         await lease.release(usage);
       };
+      if (prepared.guarded) {
+        const meta = {
+          profile: prepared.profile, novel: prepared.novel, model: prepared.scientific ? 'Bilim odaklı' : 'Hızlı',
+          trimmed: prepared.trimmed, partialFiles: prepared.partialFiles,
+          sources: prepared.sources.map(publicSource), disclaimer: DISCLAIMER,
+          capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: false, excluded: prepared.constraints.labels,
+        };
+        const events = new ReadableStream({
+          async start(out) {
+            let charged;
+            const send = event => out.enqueue(encodeEvent(event));
+            try {
+              send({ meta }); // First bytes arrive before model generation; no partial recipe is exposed.
+              upstreamStarted = true;
+              const response = await fetchImpl(ENDPOINT, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
+                body: JSON.stringify(prepared.payload), signal: controller.signal,
+              });
+              governor.observe(prepared.model, response.headers, response.status, prepared.estimated);
+              if (!response.ok) {
+                await response.body?.cancel(); charged = 0;
+                if (response.status === 429) {
+                  const wait = Math.max(1, Math.ceil(quotaReset(response.headers, prepared.estimated) / 1000));
+                  send({ error: 'Ücretsiz yapay zekâ kotası dolu.', retryAfter: wait }); out.close(); return;
+                }
+                throw new OutputError(response.status === 401 || response.status === 403 ? 'Sunucunun model erişimi veya API anahtarı kontrol edilmeli.' : 'Yapay zekâ servisi yanıt biçimini kabul etmedi veya yanıt veremedi.');
+              }
+              const result = await response.json();
+              const usage = result.usage || result.x_groq?.usage;
+              const total = Number.isFinite(usage?.total_tokens) ? usage.total_tokens : undefined;
+              const cached = Number.isFinite(usage?.prompt_tokens_details?.cached_tokens) ? Math.min(total || 0, Math.max(0, usage.prompt_tokens_details.cached_tokens)) : 0;
+              if (Number.isFinite(total)) charged = total - cached;
+              const choice = result.choices?.[0];
+              if (choice?.finish_reason === 'length') throw new OutputError('Yanıt uzunluk sınırında kesildi. Yarım deney adımları gösterilmedi; daha kısa bir fikir iste.');
+              if (choice?.finish_reason !== 'stop') throw new OutputError('Yanıt tamamlanamadı; uygulama adımları gösterilmedi.');
+              const text = validateAndRender(choice.message?.content || '', prepared);
+              meta.checked = true;
+              if (controller.signal.aborted) throw new Error('aborted');
+              if (cacheKey) { cache.set(cacheKey, { text, meta, expires: now() + 300000 }); cleanCache(); }
+              await finish(charged);
+              send({ meta }); send({ delta: text }); send({ done: true, usage: Number.isFinite(total) ? { total, cached, charged } : null }); out.close();
+            } catch (error) {
+              controller.abort();
+              try { send({ error: error instanceof OutputError ? error.message : 'Yanıt durduruldu veya bağlantı kesildi; yarım deney tarifi gösterilmedi.', errorCode: 'output_rejected' }); out.close(); } catch { /* client disconnected */ }
+            } finally { await finish(charged); }
+          },
+          async cancel() { controller.abort(); await finish(); },
+        });
+        return new Response(events, { headers: { ...RESPONSE_HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8', 'X-Accel-Buffering': 'no' } });
+      }
       let upstream;
       try {
         upstreamStarted = true;
@@ -111,7 +172,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
         profile: prepared.profile, novel: prepared.novel, model: prepared.scientific ? 'Bilim odaklı' : 'Hızlı',
         trimmed: prepared.trimmed, partialFiles: prepared.partialFiles,
         sources: prepared.sources.map(publicSource), disclaimer: DISCLAIMER,
-        capacity: governor.shared ? 'shared' : 'instance', cached: false,
+        capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: prepared.guarded, excluded: prepared.constraints.labels,
       };
       const stream = new ReadableStream({
         async start(out) {
