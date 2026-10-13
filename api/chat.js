@@ -1,3 +1,4 @@
+import { buildLocalReply } from '../lib/local-engine.js';
 import { laboratoryClarification, conversationConstraints } from '../lib/constraints.js';
 import { validateAndRender, OutputError } from '../lib/output.js';
 import { validateInput, prepareRequest, InputError } from '../lib/policy.js';
@@ -52,6 +53,12 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
     let lease, controller, cacheKey = '', lockHeld = false, upstreamStarted = false;
     try {
       const input = validateInput(await readBody(request));
+      const local = buildLocalReply(input);
+      if (local) {
+        const stream = new ReadableStream({ start(out) { out.enqueue(encodeEvent({ meta: local.meta })); out.enqueue(encodeEvent({ delta: local.text })); out.enqueue(encodeEvent({ done: true, usage: local.meta.usage })); out.close(); } });
+        return new Response(stream, { headers: { ...RESPONSE_HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8' } });
+      }
+      if (input.settings.engine === 'local') return json({ error: 'Bu istek yerel havuzda karşılanamadı. Kütüphaneden bir taslak aç veya Otomatik/Yapay zekâ modunu seç. Bu istekte model kotası kullanılmadı.' }, 422);
       const clarification = laboratoryClarification(input);
       if (clarification) {
         const constraints = conversationConstraints(input.messages);

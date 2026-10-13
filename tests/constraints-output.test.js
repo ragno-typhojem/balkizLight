@@ -53,7 +53,7 @@ test('unknown lab materials ask a relevant free clarification rather than invent
 test('a length-limited scientific answer exposes no partial recipe and triggers no auto retry', async () => {
   let calls = 0;
   const handler = createHandler({ env: { GROQ_API_KEY: 'not-real' }, fetchImpl: async () => { calls++; return Response.json({ choices: [{ message: { content: '{"title":"Eksik' }, finish_reason: 'length' }], usage: { total_tokens: 900 } }); } });
-  const request = new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages }) });
+  const request = new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages, settings: { engine: 'ai' } }) });
   const response = await handler(request); const events = [];
   for await (const raw of readSSE(response.body)) events.push(JSON.parse(raw));
   assert.equal(calls, 1); assert.ok(!events.some(event => event.delta)); assert.match(events.at(-1).error, /Yarım deney/);
@@ -67,13 +67,13 @@ test('scientific responses are validated before any delta reaches the client', a
     assert.equal(payload.response_format.json_schema.strict, true);
     return Response.json({ choices: [{ message: { content: JSON.stringify(bad) }, finish_reason: 'stop' }], usage: { total_tokens: 600 } });
   } });
-  const response = await handler(new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages }) }));
+  const response = await handler(new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages, settings: { engine: 'ai' } }) }));
   const events = []; for await (const raw of readSSE(response.body)) events.push(JSON.parse(raw));
   assert.equal(calls, 1); assert.ok(!events.some(event => event.delta)); assert.match(events.at(-1).error, /istemediğin/);
 });
 test('the lab clarification does not require a key or spend provider quota', async () => {
   let calls = 0; const handler = createHandler({ fetchImpl: async () => { calls++; throw new Error('must not call'); } });
-  const response = await handler(new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: messages.slice(0, 5) }) }));
+  const response = await handler(new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: messages.slice(0, 5), settings: { engine: 'ai' } }) }));
   const events = []; for await (const raw of readSSE(response.body)) events.push(JSON.parse(raw));
   assert.equal(calls, 0); assert.equal(events.at(-1).usage.charged, 0); assert.match(events.find(event => event.delta).delta, /etiketli derişimleri/);
 });

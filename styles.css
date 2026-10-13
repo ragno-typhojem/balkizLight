@@ -39,3 +39,7 @@
 @media print{.app-shell,.workspace,.messages-scroll{height:auto;overflow:visible}.app-shell{top:0}.chat-panel{display:block}}
 
 #library-dialog,#sources-dialog{max-height:calc(var(--app-height,100dvh) - 32px)}
+
+#materials-dialog,#ideas-dialog{width:min(860px,calc(100% - 28px));max-height:calc(var(--app-height,100dvh) - 32px)}
+#material-list .source-develop{display:inline-flex;text-decoration:none;margin-right:8px}
+#idea-search{margin:10px 0 20px;background:var(--bg);min-height:44px}

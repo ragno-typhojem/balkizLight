@@ -1,4 +1,4 @@
-# BALKIZ Light 2.2 · Etkinlik atölyesi
+# BALKIZ Light 2.5 · Etkinlik atölyesi
 
 İLKYAR projelerinde etkinlik hazırlayan gönüllüler için hafif, Türkçe bir çalışma alanı. Mevcut BALKIZ Light reposunun güncellenmiş sürümüdür. Sabit BALKIZ logosu ve sağ üstte resmi İLKYAR logosu kullanılır.
 
@@ -70,7 +70,7 @@ Dosyanın kendisi ve çıkarılan tam metin cihaz belleğinde kalır; sohbet kay
 
 ## Bilimsel doğruluk ve güvenlik
 
-Yanıtların tamamının doğru olduğu garanti edilmez. 100 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 kaynağın tarihi 10 Ekim, 20 yeni araştırma kaynağının tarihi 12 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
+Yanıtların tamamının doğru olduğu garanti edilmez. 108 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 kaynağın tarihi 10 Ekim, 20 yeni araştırma kaynağının tarihi 12 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
 
 İndeks bir kez hazırlanır; sözcük eşleşmesi ve konu ağırlıklarıyla ilgili notlar seçilir. Yeni tam planlarda en fazla 3 bilimsel not (1600 karakter) ve 1 kısa kılavuz bağlamı (1100 karakter) aktarılır. Kısa takip sohbetinde en fazla 2 bilimsel not (950 karakter) seçilir; kılavuz bağlamı yeniden eklenmez. Bağlam için ayrı embedding, arama API’si veya yapay zekâ isteği yapılmaz. Metin bulunduğunda bilimsel iddianın dayanağı ilgili referanstır; kılavuz bir uygulama onayı değildir. Uygulama çalışma sırasında internette canlı araştırma yapmaz. Kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir.
 
@@ -96,7 +96,7 @@ PDF.js ve fflate bu pakette lisanslarıyla hazırdır. Güncellemeleri yeniden k
 
 ## Bu sürümün teslim sınırı
 
-2.3.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
+2.5.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
 
 ## 2.3.0: birlikte geliştirme
 
@@ -127,3 +127,19 @@ Deney kartı tablo/HTML yerine kısa alanlardan oluşur: 120–180 kelime, 3–5
 Eldeki kimyasallar bilinmeden açık laboratuvar isteğinde ad/etiketli derişim/uygulama ortamı soran yerel bir netleştirme sunulabilir. Bu soru API anahtarı ve model çağrısı gerektirmez. Eski uzunluk sınırında kesilen tarifler ekranda yeniden gösterilmez; kayıtlar silinmez. Kullanıcının gönderdiği sohbetin tamamı repoya aktarılmaz.
 
 [ACS madde kimliği](https://www.acs.org/education/whatischemistry/landmarks/bakingpowder.html) ve [pH/göz koruması](https://www.acs.org/middleschoolchemistry/lessonplans/chapter6/lesson8.html) notlarıyla başvuru sayısı 102 oldu. Bu ekler deney onayı değildir.
+
+## 2.5.0 · Yerel fikirler, malzemeler ve karşılaştırma
+
+Otomatik mod, desteklenen fikir/malzeme/kıyaslama isteklerini önce tarayıcıda karşılar. 24 özgün araştırma önerisi için 4 yöntem/analiz seçeneği (96 uyarlama) vardır; bunlar 96 uygulama ile doğrulanmış farklı deney değildir. 31 önceki taslak ve 131 kılavuz/ek korunur. Yaş, alan, geçmişte görülen başlıklar ve tanımlı dışlamalar seçimi etkiler. Belirli bir konu havuzda bulunamazsa otomatik mod yapay zekâya geçer; yerel mod açıklama gösterir. Yerel taslaklar yapay zekâ üretimi veya ölçülmüş sonuç olarak sunulmaz. Kılavuzlar seçilen arşiv/araştırma düzeninin bütün başlıklarını kullanır.
+
+Yerel yanıt tarayıcıda hazırlanır: Groq isteği/tokenı, Vercel chat API isteği, Redis kota rezervasyonu ve ek arama API çağrısı yoktur. Siteyi ilk yüklemek normal statik barındırma trafiği kullanır. Yapay zekâyla derinleştirme kullanıcı gönderince normal kotayı kullanır; mevcut gerçek limitler kaldırılmadı. Desteklenen yerel işler model bekleme süresinde de kullanılabilir. İlk yüklemeden sonraki çevrimdışı kullanım servis çalışanı önbelleğine bağlıdır.
+
+32 malzemenin bilimsel/ürün adı, tipik bulunabileceği yer ve ilgili güvenlik notları vardır. Gliserol, nişasta, sodyum aljinat gibi seçenekler de bulunur. Kimyasal deneyde ürün kimliği, etiket, güvenlik bilgi formu ve öğretmen hazırlığı gerekir. Aljinat önerisi etiketli eğitim çözeltileri içindir; doğrulanmamış derişim veya karışım miktarı üretmez.
+
+Malzeme penceresi tüm web ve 11 mağaza alanı (Hepsiburada, Trendyol, Amazon Türkiye, n11, Migros, CarrefourSA, A101, ŞOK, BİM, Koçtaş, D&R) için Google arama bağlantısı açar. Bu bir mağaza API entegrasyonu veya otomatik ürün okuma değildir. Canlı stok/fiyat/satıcı uygunluğu doğrulanmaz; satın alma yapılmaz. Tüm marketlerin kapsamı veya her malzemenin satışta olması garanti edilmez.
+
+Kıyaslama, havuzdaki seçeneklerin araştırma sorusu, malzeme erişimi ve hazırlığını karşılaştırır. Varsayılan hafıza yalnız açık çalışmadır; kullanıcı cihazdaki çalışmaları seçerse en fazla 30 yakın çalışmanın son 12 tamamlanmış mesajı yerel seçimde kullanılabilir. Diğer çalışmaların içeriği bu işlemde sunucuya gönderilmez. Serbest metinli eski yanıtların bilimsel doğruluğu otomatik doğrulanmaz; başlıkları geçmiş bağlamı olarak gösterilebilir. Başka kullanıcıların yanıtlarını toplayan ortak öğrenme havuzu yoktur. Yapay zekâya geçilirse kısa yerel öneri kaydı açık çalışmanın bağlamına eklenir; önceki öneri kanıt sayılmaz.
+
+Başvuru sayısı 108 oldu. Bu sürümde ACS çözünme/kromatografi, CMU aljinat, MIT nişasta süspansiyonu ve NASA kâğıt helikopter kaynakları eklendi. Uygulama çalışma sırasında internette otomatik canlı araştırma yapmaz. Bilimsel ilke kaynağı, yeni sınıf düzeninin denenmiş olduğunu kanıtlamaz.
+
+2.5.0 için yalnız sözdizimi/dağıtım yapılandırması kontrolü ve build yapıldı. Kullanıcının talimatıyla otomatik regresyon testleri, tarayıcı/cihaz ve canlı Groq/Vercel denemeleri çalıştırılmadı. Yeni regresyon senaryoları kullanıcı için repoda bulunur. Build, dağıtım dosyalarını hazırladığını gösterir; canlı davranış veya yayımlanan sürümü doğrulamaz.

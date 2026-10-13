@@ -1,12 +1,16 @@
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.4.0';
-import { TEMPLATES } from './lib/templates.js?v=2.4.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.4.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.4.0';
-import { readSSE } from './lib/sse.js?v=2.4.0';
+import { conversationConstraints } from './lib/constraints.js';
+import { buildLocalReply, localIntent, LOCAL_VARIANT_COUNT } from './lib/local-engine.js?v=2.5.0';
+import { MATERIALS, STORES, marketLink } from './lib/materials.js';
+import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.5.0';
+import { TEMPLATES } from './lib/templates.js?v=2.5.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.5.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.5.0';
+import { readSSE } from './lib/sse.js?v=2.5.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
-const DEFAULTS = { domain: 'general', task: 'auto', format: 'ilkyar', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
+const DEFAULTS = { engine: 'auto', memory: 'current', domain: 'general', task: 'auto', format: 'ilkyar', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
 const SETTINGS = Object.keys(DEFAULTS);
 const e = Object.fromEntries(['history', 'thread', 'scroll', 'input', 'send', 'toast', 'sidebar'].map(name => [name, $(`#${name}`)]));
 let chats = {}, active = '', busy = false, readingFiles = false, following = true, saving, toastTimer, streamController;
@@ -151,7 +155,7 @@ function addMessage(message) {
   e.thread.append(article); return article;
 }
 function responseMeta(article, meta) {
-  article.querySelector('.response-label').textContent = meta.local ? '· Malzeme bilgisi gerekli' : meta.profile === 'template' ? '· Hazır taslak' : meta.cached ? '· Kaydedilmiş yanıt' : meta.profile === 'compact' ? '· Kısa yanıt' : '';
+  article.querySelector('.response-label').textContent = meta.profile === 'local' ? '· Yerel geliştirme · 0 token' : meta.local ? '· Malzeme bilgisi gerekli' : meta.profile === 'template' ? '· Hazır taslak' : meta.cached ? '· Kaydedilmiş yanıt' : meta.profile === 'compact' ? '· Kısa yanıt' : '';
   const footer = article.querySelector('.response-footer'); footer.hidden = false; footer.replaceChildren();
   if (Array.isArray(meta.sources) && meta.sources.length) {
     const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Taslağın başvuru kaynakları · uygulamadan önce incele' : 'Yanıta eşlik eden başvuru notları · canlı arama yapılmadı'; footer.append(label);
@@ -163,6 +167,7 @@ function responseMeta(article, meta) {
     footer.append(links);
   } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
   const note = document.createElement('div'); note.textContent = DISCLAIMER; footer.append(note);
+  if (meta.provenance) { const provenance = document.createElement('div'); provenance.textContent = meta.provenance; footer.append(provenance); }
   if (meta.excluded?.length) { const constraints = document.createElement('div'); constraints.textContent = `Korunan isteklerin: ${meta.excluded.join(', ')} önerilmesin.`; footer.append(constraints); }
   if (meta.checked) { const check = document.createElement('div'); check.textContent = 'Biçim, tanımlı dışlamalar ve bazı riskli tarifler kontrol edildi; bilimsel doğruluk onayı değildir.'; footer.append(check); }
   if (meta.usage) { const usage = document.createElement('div'); usage.textContent = `Bu yanıt: ${meta.usage.charged} token · önbellekten ${meta.usage.cached} token`; footer.append(usage); }
@@ -175,9 +180,9 @@ function responseControls(article, message) {
   };
   const download = document.createElement('button'); download.innerHTML = `${icon('down')} İndir`; download.onclick = () => downloadBlob(`${message.content}\n\n---\n${DISCLAIMER}`, 'balkiz-etkinlik.md', 'text/markdown;charset=utf-8');
   controls.append(copy, download);
-  for (const [label, prompt] of [['Farklı deney', 'Önceki deneyleri tekrarlamadan, farklı bir araştırma sorusu ve farklı düzenek içeren başka bir deney öner. Aynı yaş ve süreyi koru.'], ['Bir adım ileri', 'Bu etkinliği bir adım ileri taşı: yeni bir araştırma sorusu ve bunu sınayabileceğimiz düşük riskli bir deney öner. Tüm planı tekrar yazma.'], ['Daha az malzeme', 'Aynı etkinliği daha az malzemeyle nasıl uygulayabiliriz? Yalnız değişiklikleri ve ilgili güvenliği yaz.'], ['Kılavuz oluştur', 'Bu konuşmada geliştirdiğimiz etkinliği seçili kılavuz formatında birleştir. Son değişiklikleri koru.']]) {
+  for (const [label, prompt] of [['Yapay zekâyla derinleştir', 'Yapay zekâyla bu son etkinliği bilimsel kaynaklara ve seçtiğim derinliğe göre geliştir. Yalnız yeni katkıları yaz; ölçülmüş sonuç uydurma.'], ['Farklı deney', 'Önceki deneyleri tekrarlamadan, farklı bir araştırma sorusu ve farklı düzenek içeren başka bir deney öner. Aynı yaş ve süreyi koru.'], ['Bir adım ileri', 'Bu etkinliği bir adım ileri taşı: yeni bir araştırma sorusu ve bunu sınayabileceğimiz düşük riskli bir deney öner. Tüm planı tekrar yazma.'], ['Daha az malzeme', 'Aynı etkinliği daha az malzemeyle nasıl uygulayabiliriz? Yalnız değişiklikleri ve ilgili güvenliği yaz.'], ['Kılavuz oluştur', 'Bu konuşmada geliştirdiğimiz etkinliği seçili kılavuz formatında birleştir. Son değişiklikleri koru.']]) {
     const button = document.createElement('button'); button.textContent = label;
-    button.onclick = () => { if (!canNavigate()) return; e.input.value = prompt; draftByChat.set(active, prompt); grow(); e.input.focus(); };
+    button.onclick = () => { if (!canNavigate()) return; if (label === 'Yapay zekâyla derinleştir') { $('#engine').value = 'auto'; settingsChanged(); } e.input.value = prompt; draftByChat.set(active, prompt); grow(); e.input.focus(); };
     controls.append(button);
   }
 }
@@ -194,7 +199,8 @@ $('#jump').onclick = () => { following = true; bottom(); };
 function grow() {
   e.input.style.height = 'auto'; e.input.style.height = `${Math.min(e.input.scrollHeight, matchMedia('(max-width:720px)').matches ? 120 : 150)}px`;
   const cooling = Date.now() < cooldownUntil;
-  e.send.disabled = !busy && (readingFiles || cooling || !e.input.value.trim() || !navigator.onLine);
+  const canLocal = $('#engine').value === 'local' || localIntent({ messages: [{ role: 'user', content: e.input.value }], settings: getSettings(), attachments: currentFiles });
+  e.send.disabled = !busy && (readingFiles || (cooling || !navigator.onLine) && !canLocal || !e.input.value.trim());
   e.send.classList.toggle('is-stop', busy); e.send.setAttribute('aria-label', busy ? 'Yanıtı durdur' : cooling ? 'Tekrar deneme süresi bekleniyor' : 'Mesajı gönder');
   e.send.innerHTML = busy ? '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="1" width="14" height="14" rx="2"/></svg>' : icon('arrow');
   $('#attach').disabled = busy || readingFiles; for (const node of document.querySelectorAll('#settings-form input,#settings-form select,#settings-form textarea,#task')) node.disabled = busy;
@@ -206,7 +212,7 @@ function connection() {
 function settingsChanged() {
   if (chats[active]) { chats[active].settings = getSettings(); save(); }
   e.thread.querySelectorAll('[data-domain]').forEach(button => button.setAttribute('aria-pressed', button.dataset.domain === $('#domain').value));
-  $('#mode-status').textContent = $('#detail').value === 'auto' ? 'Otomatik · ekonomik' : $('#detail').value === 'short' ? 'Kısa yanıt' : 'Ayrıntılı yanıt';
+  $('#mode-status').textContent = $('#engine').value === 'local' ? 'Yerel havuz · 0 token' : $('#engine').value === 'ai' ? 'Yapay zekâ · kota kullanır' : $('#detail').value === 'auto' ? 'Otomatik · ekonomik' : $('#detail').value === 'short' ? 'Kısa yanıt' : 'Ayrıntılı yanıt';
 }
 for (const name of SETTINGS) $(`#${name}`).addEventListener('change', settingsChanged);
 e.input.oninput = () => { draftByChat.set(active, e.input.value); grow(); };
@@ -232,10 +238,21 @@ function requestMessages(messages) {
   const selected = usable.length > 60 ? [...usable.slice(0, 2), ...usable.slice(-58)] : usable;
   return selected.map(({ role, content, status }, index) => ({ role, content: (status !== 'done' ? '[Tamamlanmamış önceki yanıt; eksik adımlar uygulanmamalı.]\n' : '') + (index !== selected.length - 1 && content.length > 15800 ? content.slice(0, 12000) + '\n[…]\n' + content.slice(-3700) : content) }));
 }
+function requestMessagesWithPreferences(messages) {
+  const wire = requestMessages(messages), constraints = conversationConstraints(messages);
+  const statements = { 'acid-base': 'Asit baz deneyi istemiyorum.', 'food-dye': 'Gıda boyası kullanma.', crystals: 'Kristal deneyi istemiyorum.' };
+  if (constraints.excluded.length) wire.unshift({ role: 'user', content: 'Bu çalışmada korunan önceki kullanıcı tercihleri: ' + constraints.excluded.map(id => statements[id]).join(' ') });
+  return wire;
+}
 async function send(retry = false) {
-  if (busy || readingFiles || Date.now() < cooldownUntil) return;
-  if (!navigator.onLine) { toast('Çevrimdışısın. Kütüphanedeki taslakları açıp çalışmalarını okuyabilirsin.'); return; }
+  if (busy || readingFiles) return;
   const chat = chats[active]; if (!chat) return;
+  const draft = e.input.value.trim();
+  const input = { messages: [...chat.messages.filter(message => message.content.trim() && (message.role === 'user' || message.status === 'done' && !message.meta?.truncated)).map(({role,content}) => ({role,content})), { role: 'user', content: draft }], settings: getSettings(), attachments: currentFiles };
+  const memory = input.settings.memory === 'device' ? Object.values(chats).sort((a,b) => b.updatedAt - a.updatedAt).slice(0,30).flatMap(item => item.messages.slice(-12).filter(message => message.status === 'done' && !message.meta?.truncated).map(message => ({role:message.role,content:message.content.slice(0,1800)}))) : chat.messages.filter(message => message.status === 'done' && !message.meta?.truncated);
+  const local = !retry && draft ? buildLocalReply(input, memory) : null;
+  if (!local && (Date.now() < cooldownUntil || !navigator.onLine)) { toast('Yapay zekâ şu an kullanılamıyor; malzeme bulma ve yerel fikir havuzu kullanılabilir.'); return; }
+  if (!local && input.settings.engine === 'local') { toast('Bu istek hazır havuzda karşılanamadı. Fikir havuzundan seç veya Otomatik/Yapay zekâ moduna geç.'); return; }
   let payload;
   if (retry) {
     if (!retryPayload || retryPayload.chatId !== active) return;
@@ -248,8 +265,13 @@ async function send(retry = false) {
     if (chat.messages.length === 1) chat.title = text.replace(/\s+/g, ' ').slice(0, 46);
     chat.settings = getSettings(); chat.updatedAt = Date.now();
     // Original document bytes and extracted text are kept in memory only.
-    payload = { sessionId, settings: chat.settings, attachments: currentFiles.map(({ name, text }) => ({ name, text })), messages: requestMessages(chat.messages) };
+    payload = { sessionId, settings: chat.settings, attachments: currentFiles.map(({ name, text }) => ({ name, text })), messages: requestMessagesWithPreferences(chat.messages) };
     retryPayload = { chatId: active, payload }; e.input.value = ''; draftByChat.delete(active); save(); history(); $('#work-title').textContent = chat.title;
+  }
+  if (local) {
+    chat.messages.push({ role: 'assistant', content: local.text, status: 'done', meta: local.meta });
+    retryPayload = null; chat.updatedAt = Date.now(); save(); render();
+    $('#mode-status').textContent = 'Yerel geliştirme · 0 token'; announce('Yerel öneri hazır. Yapay zekâ kotası kullanılmadı.'); return;
   }
   busy = true; following = true; bottom(); grow(); connection();
   const answer = { role: 'assistant', content: '', status: 'pending', meta: null }; chat.messages.push(answer);
@@ -271,7 +293,7 @@ async function send(retry = false) {
       const event = JSON.parse(raw);
       if (event.meta) {
         answer.meta = event.meta; responseMeta(article, event.meta);
-        $('#mode-status').textContent = event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.novel ? 'Yeni deney · kısıtların korunuyor' : event.meta.profile === 'compact' ? 'Kalan bütçeye göre kısa yanıt' : 'Otomatik · ekonomik';
+        $('#mode-status').textContent = event.meta.profile === 'local' ? 'Yerel geliştirme · 0 token' : event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.novel ? 'Yeni deney · kısıtların korunuyor' : event.meta.profile === 'compact' ? 'Kalan bütçeye göre kısa yanıt' : 'Otomatik · ekonomik';
       }
       if (event.delta) { answer.content += event.delta; if (!paintTimer) paintTimer = setTimeout(paint, 65); }
       if (event.error) { if (event.retryAfter) setCooldown(Math.min(86400, Number(event.retryAfter) || 0)); throw new Error(event.error); }
@@ -464,3 +486,37 @@ chats = load(); active = Object.values(chats).sort((a, b) => b.updatedAt - a.upd
 if (active) { setSettings(chats[active].settings); render(); } else createChat();
 closeDrawers(); connection();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { /* online app remains usable */ });
+
+// Local materials and original experiment proposals. No model/search API call on open.
+$('#material-store').replaceChildren(...STORES.map(store => new Option(store.name, store.id)));
+function renderMaterials() {
+  const words = normalize($('#material-search').value).split(/\s+/).filter(Boolean), store = $('#material-store').value;
+  const visible = MATERIALS.filter(item => words.every(word => normalize(`${item.name} ${item.query} ${item.where}`).includes(word)));
+  $('#material-results').textContent = `${visible.length} / ${MATERIALS.length} malzeme · arama ve seçim 0 token`;
+  const list = $('#material-list'); list.replaceChildren();
+  for (const item of visible) {
+    const card = document.createElement('article'); card.className = 'source-card';
+    card.innerHTML = `<h3>${escapeHTML(item.name)}</h3><p>${escapeHTML(item.where)}</p><p class="source-warning">${escapeHTML(item.warning)}</p>`;
+    const link = document.createElement('a'); link.className = 'source-develop'; link.href = marketLink(item.query,store); link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Mağazada araştır ↗';
+    const add = document.createElement('button'); add.className = 'source-develop'; add.textContent = 'Malzemelerime ekle'; add.onclick = () => { if (!canNavigate()) return; const node = $('#materials'); const next = [node.value.trim(), item.name].filter(Boolean).join('; '); if (next.length > 600) { toast('Malzeme listesi dolu.'); return; } node.value = next; settingsChanged(); toast('Malzeme eklendi. Ürün uygunluğunu ayrıca kontrol et.'); };
+    card.append(link,add); list.append(card);
+  }
+}
+function renderIdeas() {
+  const words = normalize($('#idea-search').value).split(/\s+/).filter(Boolean);
+  $('#ideas-description').textContent = `${EXPERIMENT_BANK.length} özgün araştırma fikri, ${LOCAL_VARIANT_COUNT} yöntem/analiz uyarlaması. Bunlar farklılığı doğrulanmış deney sonuçları değildir. Kotasız açılır; her uygulama öğretmen ön denemesi gerektirir.`;
+  const list = $('#idea-list'); list.replaceChildren();
+  for (const card of EXPERIMENT_BANK.filter(card => words.every(word => normalize(`${card.title} ${card.question} ${activityLabel(card.domain)} ${card.materials.map(id => MATERIALS.find(item => item.id === id)?.name).join(' ')}`).includes(word)))) {
+    const node = document.createElement('article'); node.className = 'template-card';
+    node.innerHTML = `<span class="template-category">${escapeHTML(activityLabel(card.domain))} · ${card.minAge}+ yaş</span><h3>${escapeHTML(card.title)}</h3><p>${escapeHTML(card.question)}</p>`;
+    const open = document.createElement('button'); open.textContent = 'Kotasız aç'; open.onclick = () => {
+      if (!canNavigate()) return;
+      const age = Number($('#age').value.split('–')[0].replace('+',''));
+      if (age < card.minAge) { toast(`Bu fikir ${card.minAge}+ yaş için. Uygun yaş grubunu seç veya başka fikir aç.`); return; }
+      $('#ideas-dialog').close(); $('#domain').value = card.domain; $('#engine').value = 'auto'; settingsChanged(); e.input.value = `${activityLabel(card.domain)} alanında ${card.title} için kılavuz yaz.`; grow(); send();
+    }; node.append(open); list.append(node);
+  }
+}
+$('#materials-open').onclick = () => { closeDrawers(); renderMaterials(); $('#materials-dialog').showModal(); };
+$('#ideas-open').onclick = () => { closeDrawers(); renderIdeas(); $('#ideas-dialog').showModal(); };
+$('#material-search').oninput = renderMaterials; $('#material-store').onchange = renderMaterials; $('#idea-search').oninput = renderIdeas;

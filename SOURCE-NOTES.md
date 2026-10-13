@@ -301,3 +301,15 @@ Deney kartı tablo/HTML yerine kısa alanlardan oluşur: 120–180 kelime, 3–5
 Eldeki kimyasallar bilinmeden açık laboratuvar isteğinde ad/etiketli derişim/uygulama ortamı soran yerel bir netleştirme sunulabilir. Bu soru API anahtarı ve model çağrısı gerektirmez. Eski uzunluk sınırında kesilen tarifler ekranda yeniden gösterilmez; kayıtlar silinmez. Kullanıcının gönderdiği sohbetin tamamı repoya aktarılmaz.
 
 [ACS madde kimliği](https://www.acs.org/education/whatischemistry/landmarks/bakingpowder.html) ve [pH/göz koruması](https://www.acs.org/middleschoolchemistry/lessonplans/chapter6/lesson8.html) notlarıyla başvuru sayısı 102 oldu. Bu ekler deney onayı değildir.
+
+## 2.5.0 · Erişilebilir malzemeler ve yerel öneriler
+
+13 Ekim 2026'da 6 birincil kaynak eklendi:
+
+- [ACS şeker çözünmesi](https://www.acs.org/middleschoolchemistry/lessonplans/chapter5/lesson4.html) ve [çözünme ile karşılaştırma](https://www.acs.org/middleschoolchemistry/lessonplans/chapter5/lesson5.html): görünmez olmak yok olmak değildir; çözünme hızı ile denge çözünürlüğü ayrılır.
+- [ACS kâğıt kromatografisi](https://www.acs.org/content/dam/acsorg/education/outreach/kidszone/kids-zone-investigate-with-chromatography.pdf): su bazlı kalem ve kâğıtla bileşenlerin ayrılması.
+- [CMU Gelfand jel boncukları](https://www.cmu.edu/gelfand/k12-educational-resources/polymers/polymer-architecture/gel-beads-and-worms.html): aljinat–kalsiyum jelinin bilimsel dayanağı. Yerel öneri sayfadaki hazırlama reçetesini kopyalamaz; etiketli eğitim çözeltilerini, öğretmen hazırlığını ve ürün güvenlik bilgi formunu ister.
+- [MIT nişasta süspansiyonu](https://news.mit.edu/index.php/2019/oobleck-behavior-predict-cornstarch-1006): kuvvete bağlı akış davranışı; bütün koşullarda sabit bir katı veya sıvı denmez.
+- [NASA/JPL kâğıt helikopter](https://www.jpl.nasa.gov/edu/pdfs/paperhelicopter_worksheet.pdf): kontrollü kâğıt düzenek karşılaştırması. Yerel öneri yüksek yerden atlama/merdivene çıkma içermez.
+
+24 yerel fikir, kaynaklarla ilişkili özgün geliştirme taslaklarıdır; fiziksel olarak denenmedi. Dört yöntem/analiz uyarlaması bağımsız deney doğrulaması değildir. Mağaza sorgularında otomatik erişim güvenilir şekilde sağlanamadığı için uygulamada alan adıyla sınırlı web arama bağlantıları kullanılır. Ürün fiyatı veya stok bilgisinden bilimsel uygunluk çıkarılmaz. Katalog 32 malzeme içerir; tüm kimyasallar veya tüm satıcılar katalogda değildir.
