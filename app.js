@@ -1,16 +1,16 @@
 import { conversationConstraints } from './lib/constraints.js';
-import { buildLocalReply, localIntent, LOCAL_VARIANT_COUNT } from './lib/local-engine.js?v=2.5.0';
+import { buildLocalReply, localIntent, LOCAL_VARIANT_COUNT } from './lib/local-engine.js?v=2.6.0';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.5.0';
-import { TEMPLATES } from './lib/templates.js?v=2.5.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.5.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.5.0';
-import { readSSE } from './lib/sse.js?v=2.5.0';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.6.0';
+import { TEMPLATES } from './lib/templates.js?v=2.6.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.6.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.6.0';
+import { readSSE } from './lib/sse.js?v=2.6.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
-const DEFAULTS = { engine: 'auto', memory: 'current', domain: 'general', task: 'auto', format: 'ilkyar', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
+const DEFAULTS = { engine: 'auto', aiProfile: 'economy', memory: 'current', domain: 'general', task: 'auto', format: 'ilkyar', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
 const SETTINGS = Object.keys(DEFAULTS);
 const e = Object.fromEntries(['history', 'thread', 'scroll', 'input', 'send', 'toast', 'sidebar'].map(name => [name, $(`#${name}`)]));
 let chats = {}, active = '', busy = false, readingFiles = false, following = true, saving, toastTimer, streamController;
@@ -293,7 +293,7 @@ async function send(retry = false) {
       const event = JSON.parse(raw);
       if (event.meta) {
         answer.meta = event.meta; responseMeta(article, event.meta);
-        $('#mode-status').textContent = event.meta.profile === 'local' ? 'Yerel geliştirme · 0 token' : event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.novel ? 'Yeni deney · kısıtların korunuyor' : event.meta.profile === 'compact' ? 'Kalan bütçeye göre kısa yanıt' : 'Otomatik · ekonomik';
+        $('#mode-status').textContent = event.meta.profile === 'local' ? 'Yerel geliştirme · 0 token' : event.meta.cached ? 'Kaydedilmiş yanıt' : event.meta.novel ? 'Yeni deney · kısıtların korunuyor' : event.meta.profile === 'compact' ? 'Kısa ekonomik yanıt' : 'Otomatik · ekonomik';
       }
       if (event.delta) { answer.content += event.delta; if (!paintTimer) paintTimer = setTimeout(paint, 65); }
       if (event.error) { if (event.retryAfter) setCooldown(Math.min(86400, Number(event.retryAfter) || 0)); throw new Error(event.error); }

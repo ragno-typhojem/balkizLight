@@ -52,3 +52,18 @@ test('a custom previous answer and an uncatalogued chemical are not replaced by 
   assert.equal(buildLocalReply(input('Bu konuşmadaki etkinliğin kılavuzunu yaz', {}, [{ role: 'assistant', content: 'Özel elektromanyetik ölçüm düzeneği' }])), null);
   assert.equal(buildLocalReply(input('Bakır sülfat nereden alırım?')), null);
 });
+test('new research cards contain controls, units and realistic timing without invented measurements', () => {
+  const card = EXPERIMENT_BANK.find(item => item.id === 'seed-water');
+  const result = buildLocalReply(input(`${card.title} için kılavuz yaz`, { domain: 'microbiology', format: 'research' }));
+  assert.deepEqual(result.meta.patterns, [card.id]);
+  assert.ok(result.text.includes(card.controls));
+  assert.ok(result.text.includes(card.measure));
+  assert.ok(result.text.includes(card.timing));
+});
+test('a topic-specific local follow-up stays on that topic rather than choosing an unrelated unseen idea', () => {
+  const first = buildLocalReply(input('Buharlaşma deneyi öner'));
+  const second = buildLocalReply(input('Başka buharlaşma deneyi öner', {}, [{ role: 'assistant', content: first.text }]));
+  assert.deepEqual(first.meta.patterns, ['evap-area']);
+  assert.deepEqual(second.meta.patterns, ['evap-area']);
+  assert.notEqual(first.text, second.text);
+});

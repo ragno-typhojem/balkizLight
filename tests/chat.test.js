@@ -9,7 +9,7 @@ const events = async response => { const result = []; for await (const raw of re
 
 test('private repeated requests are cached without another upstream call', async () => {
   let calls = 0; const handler = createHandler({ env: { GROQ_API_KEY: 'server-secret' }, fetchImpl: async (url, init) => {
-    calls++; const payload = JSON.parse(init.body); assert.equal(payload.model, 'openai/gpt-oss-120b'); assert.equal(payload.include_reasoning, false); return upstream();
+    calls++; const payload = JSON.parse(init.body); assert.equal(payload.model, 'openai/gpt-oss-20b'); assert.equal(payload.include_reasoning, false); return upstream();
   } });
   const first = await events(await handler(request())); const second = await events(await handler(request()));
   assert.equal(calls, 1); assert.equal(first[0].meta.cached, false); assert.equal(second[0].meta.cached, true);

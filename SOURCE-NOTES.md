@@ -313,3 +313,11 @@ Eldeki kimyasallar bilinmeden açık laboratuvar isteğinde ad/etiketli derişim
 - [NASA/JPL kâğıt helikopter](https://www.jpl.nasa.gov/edu/pdfs/paperhelicopter_worksheet.pdf): kontrollü kâğıt düzenek karşılaştırması. Yerel öneri yüksek yerden atlama/merdivene çıkma içermez.
 
 24 yerel fikir, kaynaklarla ilişkili özgün geliştirme taslaklarıdır; fiziksel olarak denenmedi. Dört yöntem/analiz uyarlaması bağımsız deney doğrulaması değildir. Mağaza sorgularında otomatik erişim güvenilir şekilde sağlanamadığı için uygulamada alan adıyla sınırlı web arama bağlantıları kullanılır. Ürün fiyatı veya stok bilgisinden bilimsel uygunluk çıkarılmaz. Katalog 32 malzeme içerir; tüm kimyasallar veya tüm satıcılar katalogda değildir.
+
+## 2.6.0 · 36 yeni araştırma önerisi
+
+Yerel havuz 60 fikre çıktı. Yeni kartlarda kontrol koşulları, ölçüm/birim ve gözlem süresi ayrı alanlardır. Kartlar kaynak metninin tam kopyası veya ölçülmüş sonuç değildir. Şeker çözünmesi, kâğıt köprü ve kontrollü ölçüm gibi önceki kaynaklar yeniden kullanıldı; aynı URL yeni kaynakmış gibi çoğaltılmadı.
+
+8 yeni birincil başvuru: [ACS buharlaşma](https://www.acs.org/middleschoolchemistry/lessonplans/chapter2/lesson2.html), [ACS yoğuşma](https://www.acs.org/middleschoolchemistry/lessonplans/chapter2/lesson3.html), [ACS erime](https://www.acs.org/middleschoolchemistry/lessonplans/chapter2/lesson5.html), [ACS hacim/yoğunluk](https://www.acs.org/middleschoolchemistry/lessonplans/chapter3/lesson2.html), [ACS sıcaklık/çözünme](https://www.acs.org/middleschoolchemistry/lessonplans/chapter5/lesson6.html), [OpenStax ozmoz](https://openstax.org/books/biology-2e/pages/5-2-passive-transport), [OpenStax bitki tepkileri](https://openstax.org/books/biology-2e/pages/30-6-plant-sensory-systems-and-responses), [NASA geçiş ışık eğrisi](https://science.nasa.gov/resource/transit-light-curve/). Kaynak sayısı 116'dır.
+
+Kaynaklardaki sıcak su/kuru buz gösterileri aynen aktarılmadı. Önerilerde su buzu, öğretmenin kontrol ettiği dokunmaya uygun ılık su veya kâğıt model kullanılır; yeni uygulama koşulları öğretmen ön denemesi gerektirir. Plastik kap dışındaki yoğuşmanın ortam nemine bağımlılığı ve bitki gözlemlerinin günlere yayılması açık yazıldı.

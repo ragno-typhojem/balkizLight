@@ -109,7 +109,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       };
       if (prepared.guarded) {
         const meta = {
-          profile: prepared.profile, novel: prepared.novel, model: prepared.scientific ? 'Bilim odaklı' : 'Hızlı',
+          profile: prepared.profile, novel: prepared.novel, model: prepared.route === 'research' ? 'Bilimsel derinlik' : 'Ekonomik',
           trimmed: prepared.trimmed, partialFiles: prepared.partialFiles,
           sources: prepared.sources.map(publicSource), disclaimer: DISCLAIMER,
           capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: false, excluded: prepared.constraints.labels,
@@ -176,7 +176,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
         return json({ error: upstream.status === 401 || upstream.status === 403 ? 'Sunucunun yapay zekâ anahtarı veya model erişimi kontrol edilmeli.' : 'Yapay zekâ servisi yanıt veremedi. Tekrar deneyebilirsin.' }, 502);
       }
       const meta = {
-        profile: prepared.profile, novel: prepared.novel, model: prepared.scientific ? 'Bilim odaklı' : 'Hızlı',
+        profile: prepared.profile, novel: prepared.novel, model: prepared.route === 'research' ? 'Bilimsel derinlik' : 'Ekonomik',
         trimmed: prepared.trimmed, partialFiles: prepared.partialFiles,
         sources: prepared.sources.map(publicSource), disclaimer: DISCLAIMER,
         capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: prepared.guarded, excluded: prepared.constraints.labels,

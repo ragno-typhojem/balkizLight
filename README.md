@@ -1,4 +1,4 @@
-# BALKIZ Light 2.5 · Etkinlik atölyesi
+# BALKIZ Light 2.6 · Etkinlik atölyesi
 
 İLKYAR projelerinde etkinlik hazırlayan gönüllüler için hafif, Türkçe bir çalışma alanı. Mevcut BALKIZ Light reposunun güncellenmiş sürümüdür. Sabit BALKIZ logosu ve sağ üstte resmi İLKYAR logosu kullanılır.
 
@@ -23,7 +23,7 @@ Diğer ayarlar `.env.example` içinde. `.env.local` veya gerçek anahtarları re
 
 ## Ücretsiz kapasite nasıl korunur?
 
-- Bilim, deney, belge incelemesi ve doğruluk değerlendirmesi `openai/gpt-oss-120b`; basit genel metin işleri `openai/gpt-oss-20b` kullanır.
+- Normal bilimsel açıklama ve basit genel işlerde `openai/gpt-oss-20b`; kimya/güvenlik, belge inceleme ve ileri araştırmada `openai/gpt-oss-120b` kullanılır. Göreve göre seçim aşağıdaki 2.6.0 notlarında açıklanır.
 - Yoğunlukta bilim modeli korunur; yanıt üst sınırı ve taşınan geçmiş azalır. Güncel kullanıcı mesajı kesilmez. Bütçeye sığmayan istek için açık hata verilir.
 - Son ilgili mesajlar, son yanıt ve uzun sohbette başlangıç kısıtları kısa alıntılarla korunur; hazır taslak ve kısmi yanıt bağlamı da taşınır. Sıkıştırma için ek model çağrısı yapılmaz; bütün geçmiş her seferinde gönderilmez. Dosyaların soruyla ilgili küçük metin bölümleri seçilir.
 - Token tahmini Türkçe için ihtiyatlı UTF-8 tahminidir; gerçek model tokenizer’ı değildir. Sağlayıcı 429 ve reset başlıkları esas alınır.
@@ -70,7 +70,7 @@ Dosyanın kendisi ve çıkarılan tam metin cihaz belleğinde kalır; sohbet kay
 
 ## Bilimsel doğruluk ve güvenlik
 
-Yanıtların tamamının doğru olduğu garanti edilmez. 108 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 kaynağın tarihi 10 Ekim, 20 yeni araştırma kaynağının tarihi 12 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
+Yanıtların tamamının doğru olduğu garanti edilmez. 116 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 kaynağın tarihi 10 Ekim, 20 yeni araştırma kaynağının tarihi 12 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
 
 İndeks bir kez hazırlanır; sözcük eşleşmesi ve konu ağırlıklarıyla ilgili notlar seçilir. Yeni tam planlarda en fazla 3 bilimsel not (1600 karakter) ve 1 kısa kılavuz bağlamı (1100 karakter) aktarılır. Kısa takip sohbetinde en fazla 2 bilimsel not (950 karakter) seçilir; kılavuz bağlamı yeniden eklenmez. Bağlam için ayrı embedding, arama API’si veya yapay zekâ isteği yapılmaz. Metin bulunduğunda bilimsel iddianın dayanağı ilgili referanstır; kılavuz bir uygulama onayı değildir. Uygulama çalışma sırasında internette canlı araştırma yapmaz. Kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir.
 
@@ -96,7 +96,7 @@ PDF.js ve fflate bu pakette lisanslarıyla hazırdır. Güncellemeleri yeniden k
 
 ## Bu sürümün teslim sınırı
 
-2.5.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
+2.6.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
 
 ## 2.3.0: birlikte geliştirme
 
@@ -143,3 +143,17 @@ Kıyaslama, havuzdaki seçeneklerin araştırma sorusu, malzeme erişimi ve haz�
 Başvuru sayısı 108 oldu. Bu sürümde ACS çözünme/kromatografi, CMU aljinat, MIT nişasta süspansiyonu ve NASA kâğıt helikopter kaynakları eklendi. Uygulama çalışma sırasında internette otomatik canlı araştırma yapmaz. Bilimsel ilke kaynağı, yeni sınıf düzeninin denenmiş olduğunu kanıtlamaz.
 
 2.5.0 için yalnız sözdizimi/dağıtım yapılandırması kontrolü ve build yapıldı. Kullanıcının talimatıyla otomatik regresyon testleri, tarayıcı/cihaz ve canlı Groq/Vercel denemeleri çalıştırılmadı. Yeni regresyon senaryoları kullanıcı için repoda bulunur. Build, dağıtım dosyalarını hazırladığını gösterir; canlı davranış veya yayımlanan sürümü doğrulamaz.
+
+## 2.6.0 · Daha geniş araştırma havuzu ve ekonomik yönlendirme
+
+36 yeni öneriyle özgün yerel havuz 60 fikre, yöntem/analiz seçenekleri 240 uyarlamaya çıktı. 14 yeni ürün/malzeme kaydıyla katalog 46 oldu; 8 yeni birincil başvuruyla kaynak sayısı 116'ya çıktı. Önceki 31 taslak ve 131 kılavuz/ek korunur. Yeni öneriler fiziksel olarak denenmedi; 240 uyarlama 240 bağımsız doğrulanmış deney değildir.
+
+Yeni kartlar buharlaşma, yoğuşma, buz/ısı aktarımı, yoğunluk ve ayırma; köprü, tork, statik yük, ses ve optik; ölçek/geçiş modelleri; örnekleme, Euler yolları ve ölçüm; AI test verisi, aşırı uyum ve eşik; ozmoz, çimlenme, kök yönelimi ve robot simülasyonlarını kapsar. Her yeni kart kontrol koşullarını, ölçülecek büyüklük/birimi ve gerçek gözlem süre sınırını içerir. Günler süren bitki gözlemi tek ders içinde sonuç veriyormuş gibi gösterilmez. Kılavuzlar bu ayrıntıları seçili formatta taşır. Konu eşleşmesinde başlık/soru/malzeme önceliklidir; bilimsel açıklamadaki tek bir yan sözcük yüzünden başka konu seçilmesi azaltıldı.
+
+Yerel havuz desteklenen işlemleri 0 model tokenıyla ve chat API çağrısı olmadan hazırlar. Normal AI yolu artık GPT-OSS 20B'yi kullanabilir. Kimya/kimyasal uygulama, güvenlik/risk, belge inceleme, ileri düzey ve belirsizlik/özel hesap işleri GPT-OSS 120B'ye gider. Ayarlarda “Ayrıntılı bilimsel çalışma” seçimi bilimsel istekleri 120B'ye yönlendirir. Bu sınıflandırma tanımlı kurallardır; bütün konular için kusursuz zorluk/risk tanısı değildir. Güvenlik talimatı ve çıktı kontrolleri her bilim modelinde korunur. Trafik nedeniyle karmaşık bilim isteği küçük modele düşürülmez; 429'dan sonra başka modelle otomatik tekrar yapılmaz.
+
+Ekonomik kısa AI işlerinde bağlam/çıktı bütçesi küçültülür; geçerli kullanıcı mesajı ve tanımlı dışlamalar korunur. Tekrar eden bağlam talimatları kısaltıldı; GPT-OSS düşük reasoning effort kullanmaya devam eder. Bu kaynak tüketimini azaltma tasarımıdır; gerçek token tasarrufu veya model doğruluğu canlı ölçülmedi. 20B ve 120B'nin ücretsiz Groq kota tablosu aynıdır; küçük model sınırsız kullanım sağlamaz. Sunucudaki isteğe bağlı `GROQ_ECONOMY_MODEL` değişkeni ekonomik modeli belirler; önceki `GROQ_FAST_MODEL` ve `GROQ_SCIENCE_MODEL` ayarları çalışır.
+
+Kullanıcı tercihiyle Gemini/Mistral eklenmedi. Monica Open API ücretlidir ve ücretsiz kişisel sohbet hakkıyla ayrı sistemdir. İncelenen alternatiflerin kalıcı ücretsiz/deneme/ücretli ayrımı [API-SECENEKLERI.md](API-SECENEKLERI.md) içindedir. Bu sürüm alternatif sağlayıcıya geçirilmiş değildir; kullanıcı BALKIZ arayüzünü kullanmaya devam eder, mevcut API anahtarı yalnız sunucudadır.
+
+Teslim kontrolü yalnız JavaScript/JSON sözdizimi, dağıtım dosyalarının hazırlanması ve paket içeriğidir. Otomatik testler, tarayıcı/cihaz ve canlı Groq/Vercel çalıştırılmadı; kullanıcıya bırakıldı.

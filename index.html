@@ -8,9 +8,9 @@
   <title>BALKIZ Light · Etkinlik atölyesi</title>
   <link rel="icon" href="/assets/balkiz-mark.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/styles.css?v=2.5.0">
+  <link rel="stylesheet" href="/styles.css?v=2.6.0">
   <script src="/vendor/marked.umd.js" defer></script>
-  <script type="module" src="/app.js?v=2.5.0"></script>
+  <script type="module" src="/app.js?v=2.6.0"></script>
 </head>
 <body>
   <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -72,6 +72,7 @@
           <h2>Etkinlik çerçevesi</h2><p class="context-description">Küçük ayrıntılar, daha iyi bir plan.</p>
           <form id="settings-form" class="settings-form">
             <label for="engine">Yanıt yolu</label><select id="engine"><option value="auto">Otomatik · önce kotasız seçenekler</option><option value="local">Yalnız yerel · 0 token</option><option value="ai">Yapay zekâ · kota kullanır</option></select><label for="memory">Karşılaştırma havuzu</label><select id="memory"><option value="current">Bu çalışma</option><option value="device">Bu cihazdaki çalışmalar · yerel</option></select>
+            <label for="aiProfile">Yapay zekâ kullanımı</label><select id="aiProfile"><option value="economy">Ekonomik · göreve göre seçim</option><option value="research">Ayrıntılı bilimsel çalışma</option></select>
             <label for="domain">Etkinlik alanı</label><select id="domain"><option value="general">Birlikte seçelim</option></select>
             <label for="age">Yaş grubu</label><select id="age"><option value="6–8">6–8 yaş</option><option value="9–12" selected>9–12 yaş</option><option value="13–15">13–15 yaş</option><option value="16+">16 yaş ve üzeri</option></select>
             <label for="difficulty">Bilimsel derinlik</label><select id="difficulty"><option value="intro">Başlangıç · keşfet</option><option value="intermediate">Orta · karşılaştır ve ölç</option><option value="advanced">İleri · model, grafik ve belirsizlik</option></select>

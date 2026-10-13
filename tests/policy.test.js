@@ -1,18 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateInput, prepareRequest, isScientific, excerpts, SYSTEM } from '../lib/policy.js';
+import { validateInput, prepareRequest, isScientific, modelRoute, excerpts, SYSTEM } from '../lib/policy.js';
 import { retrieveSources } from '../lib/knowledge.js';
 
 const input = (content, settings = {}, extra = {}) => validateInput({ messages: [{ role: 'user', content }], settings, ...extra });
-test('science and safety requests retain the science model under pressure', () => {
+test('simple science uses the economy model while safety and advanced work retain the research model', () => {
   for (const question of ['Ay’ın evreleri', 'Sirke ile karbonatı kapalı şişede karıştır', 'Elektrik akımının birimi', 'Yapay zekâ çocuklara nasıl anlatılır?', 'Fotosentez nedir?']) {
     const body = input(question);
     assert.ok(isScientific(body));
-    assert.equal(prepareRequest(body, true).model, 'openai/gpt-oss-120b');
-    assert.ok(prepareRequest(body, true).maxTokens < prepareRequest(body).maxTokens);
+    assert.equal(prepareRequest(body, true).model, question.includes('Sirke') ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b');
+    assert.ok(prepareRequest(body, true).maxTokens <= prepareRequest(body).maxTokens);
     assert.match(prepareRequest(body, true).payload.messages[0].content, /Güvenlik/);
   }
   assert.equal(prepareRequest(input('Davet metnimi sadeleştir', { task: 'edit' })).model, 'openai/gpt-oss-20b');
+});
+test('research selection and chemical work never downgrade due to traffic pressure', () => {
+  for (const body of [input('Ay evrelerini açıkla', { aiProfile: 'research' }), input('Sarkaçta belirsizlik hesabı', { difficulty: 'advanced' }), input('Gliserinle deney tasarla'), input('Bu metnin güvenliğini incele', { task: 'review' })]) {
+    assert.equal(modelRoute(body), 'research');
+    assert.equal(prepareRequest(body, true).model, 'openai/gpt-oss-120b');
+  }
+  assert.equal(prepareRequest(input('Ay evrelerini açıkla'), false, { GROQ_ECONOMY_MODEL: 'configured-economy' }).model, 'configured-economy');
 });
 test('latest user constraints are never cut to save tokens', () => {
   const body = input('Uzun bir konu '.repeat(900) + ' SON KRİTİK KISIT: sıcaklık yok.');
