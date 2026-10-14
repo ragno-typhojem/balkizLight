@@ -1,14 +1,14 @@
 import { listingsFor, PROCUREMENT_DATE } from './lib/procurement.js';
 import { conversationConstraints } from './lib/constraints.js';
 import { turnSettings } from './lib/conversation-state.js';
-import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.5';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.6';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.5';
-import { TEMPLATES } from './lib/templates.js?v=2.9.5';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.5';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.5';
-import { readSSE } from './lib/sse.js?v=2.9.5';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.6';
+import { TEMPLATES } from './lib/templates.js?v=2.9.6';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.6';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.6';
+import { readSSE } from './lib/sse.js?v=2.9.6';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -29,7 +29,7 @@ const uid = () => crypto.randomUUID();
 // Populate choices before restoring chats so new fields and old science selections survive.
 $('#domain').replaceChildren(new Option('Birlikte seçelim', 'general'), ...ACTIVITY_AREAS.map(area => new Option(area.label, area.id)), new Option('Fen bilimleri · genel', 'science'));
 $('#template-category').replaceChildren(new Option('Tüm başlıklar', 'all'), ...ACTIVITY_AREAS.map(area => new Option(area.label, area.id)));
-$('#template-count').textContent = TEMPLATES.length;
+$('#template-count').textContent = EXPERIMENT_BANK.length;
 function toast(message) { e.toast.textContent = message; e.toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => e.toast.classList.remove('show'), 4500); }
 function announce(message) { $('#announce').textContent = message; }
 function safeURL(url) { try { const parsed = new URL(url); return ['https:', 'http:'].includes(parsed.protocol) ? parsed.href : ''; } catch { return ''; } }
@@ -418,7 +418,8 @@ window.addEventListener('resize', () => {
 window.visualViewport?.addEventListener('resize', fitViewport);
 window.visualViewport?.addEventListener('scroll', fitViewport);
 fitViewport();
-$('#templates-open').onclick = () => { if (!canNavigate()) return; closeDrawers(); $('#library-dialog').showModal(); };
+$('#templates-open').onclick = () => { if (!canNavigate()) return; closeDrawers(); renderIdeas(); $('#ideas-dialog').showModal(); };
+$('#guides-open').onclick = () => { $('#ideas-dialog').close(); $('#library-dialog').showModal(); };
 $('#sources-open').onclick = () => { closeDrawers(); renderSources(); $('#sources-dialog').showModal(); };
 for (const dialog of document.querySelectorAll('dialog')) {
   dialog.querySelector('.dialog-close').onclick = () => dialog.close();

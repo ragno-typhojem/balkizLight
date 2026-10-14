@@ -93,3 +93,12 @@ test('chemistry output rejects unsupported doses and observed carbonate/thiocyan
   for(const reply of ['Sodyum karbonat ve kalsiyum klorür karışımında CO2 gazı çıkar.','Demir tiyosiyanat manyetik bir çökelti oluşturur.','5 g kalsiyum klorürü 50 mL suya ekle ve karıştır.']) assert.throws(()=>validateAndRender(JSON.stringify({reply}),prepared));
   assert.doesNotThrow(()=>validateAndRender(JSON.stringify({reply:'Kalsiyum klorür ve sodyum bikarbonat için öğretmenin hazırladığı etiketli eğitim çözeltilerini kullan; gözlemi su kontrolleriyle karşılaştır.'}),prepared));
 });
+
+test('multiple idea output has independent numbered questions rather than unsolicited recipes',async()=>{
+  const {validateAndRender}=await import('../lib/output.js');
+  const p=prepareRequest(validateInput({messages:[{role:'user',content:'İki farklı kimya araştırma fikri öner'}],settings:{domain:'chemistry'}}));
+  assert.equal(p.pluralIdeas,true);assert.equal(p.ideaCount,2);
+  const ideas=[{title:'İletkenlik',question:'İyon tipi neyi değiştirir?',mechanism:'İyonların hareketi iletkenlikle ilişkilidir.',measurement:'Aynı sıcaklıkta µS/cm.',safety:'Etiketli eğitim çözeltilerini öğretmen hazırlar.'},{title:'Aljinat',question:'Jel geometrisi neyi etkiler?',mechanism:'Polimer ağında su ve mekanik cevap.',measurement:'Aynı yükte şekil değişimi mm.',safety:'Deney örnekleri tüketilmez.'}];
+  const text=validateAndRender(JSON.stringify({ideas}),p);assert.match(text,/### 1. İletkenlik/);assert.match(text,/### 2. Aljinat/);
+  assert.throws(()=>validateAndRender(JSON.stringify({ideas:ideas.slice(0,1)}),p));
+});
