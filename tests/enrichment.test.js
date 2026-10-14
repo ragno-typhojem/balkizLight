@@ -149,3 +149,11 @@ test('scientific novelty uses evidence diversity rather than higher sampling noi
  const optics=prepareRequest(validateInput({messages:[{role:'user',content:'Polarizasyon etkinliği için kılavuz yaz'}]}));
  assert.equal(optics.scientific,true);assert.equal(optics.route,'research');
 });
+
+test('explicit hazard prohibitions do not turn a safe research idea into a rejected recipe',async()=>{
+ const {riskyRecipe,validateAndRender}=await import('../lib/output.js');
+ assert.equal(riskyRecipe('Ateş kaynağı kullanmayın.'),false);
+ const p=prepareRequest(validateInput({messages:[{role:'user',content:'Başka kimya araştırması öner'}],settings:{domain:'chemistry'}}));
+ assert.doesNotThrow(()=>validateAndRender(JSON.stringify({ideas:[{title:'Işık ömrü',question:'Sıcaklık etkili mi?',mechanism:'Kapalı ışıldayan çubukları karşılaştır.',measurement:'Zaman dakika ve sıcaklık °C.',safety:'Kuru buz kullanmayın; çubukları açmayın.'}]}),p));
+ assert.throws(()=>validateAndRender(JSON.stringify({ideas:[{title:'Soğutma',question:'Sıcaklık etkili mi?',mechanism:'Kuru buz kullanın.',measurement:'Sıcaklık °C.',safety:'Gözlük takın.'}]}),p));
+});
