@@ -112,7 +112,7 @@ test('constraint checks distinguish redox indicators and explicit non-use from f
   const {violatesExclusions}=await import('../lib/constraints.js');
   const c=conversationConstraints([{role:'user',content:'Asit baz ve gıda boyası istemiyorum.'}]);
   assert.equal(violatesExclusions('C vitamini redoks deneyinde DCPIP indikatörü kullanılır.',c),false);
-  assert.equal(violatesExclusions('Gıda boyası kullanılmaz; etiketli aljinat jeli incelenir.',c),false);
+  for(const text of ['Gıda boyası kullanılmaz; etiketli aljinat jeli incelenir.','Gıda boyası kullanmadan ölç.','Gıda boyası kullanılmamalıdır.']) assert.equal(violatesExclusions(text,c),false);
   assert.equal(violatesExclusions('pH indikatörü ile asit–baz titrasyonu.',c),true);
   assert.equal(violatesExclusions('Gıda boyası ekle.',c),true);
   const all=conversationConstraints([{role:'user',content:'İndikatör kullanma.'}]);assert.equal(violatesExclusions('Redoks indikatörü.',all),true);
