@@ -165,3 +165,8 @@ test('guide generation retains blank data and rejects invented measured signals'
  assert.throws(()=>validateAndRender(JSON.stringify({reply:'Ölçümde I₁≈ 120 lux, 30°→95 lux.'}),p));
  assert.doesNotThrow(()=>validateAndRender(JSON.stringify({reply:'Açı 30°; okunan ışık düzeyi: ___ lx. Verileri siz kaydedin.'}),p));
 });
+
+test('arts activity requests keep explicit option counts and the reliable generation route',()=>{
+ const p=prepareRequest(validateInput({messages:[{role:'user',content:'İki farklı yaratıcı drama etkinliği için fikir öner'}],settings:{domain:'drama'}}));
+ assert.equal(p.route,'research');assert.equal(p.ideaCount,2);
+});
