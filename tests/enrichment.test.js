@@ -142,3 +142,10 @@ test('reply text must contain an answer rather than an echoed schema',async()=>{
  assert.throws(()=>validateAndRender(JSON.stringify({reply:JSON.stringify({type:'object',properties:{reply:{type:'string'}},required:['reply']})}),p));
  assert.ok(!p.payload.messages.some(m=>m.content.includes('alan sözleşmesine uygun veri')));
 });
+
+test('scientific novelty uses evidence diversity rather than higher sampling noise',()=>{
+ const p=prepareRequest(validateInput({messages:[{role:'user',content:'Yeni kimya araştırması öner'}],settings:{domain:'chemistry'}}));
+ assert.equal(p.payload.temperature,0.2);
+ const optics=prepareRequest(validateInput({messages:[{role:'user',content:'Polarizasyon etkinliği için kılavuz yaz'}]}));
+ assert.equal(optics.scientific,true);assert.equal(optics.route,'research');
+});

@@ -25,11 +25,11 @@ test('Cloudflare GPT-OSS retains low reasoning while Qwen keeps no-think without
   assert.equal(economy.reasoning_effort,undefined); assert.match(economy.messages.at(-1).content,/no_think/);
 });
 
-test('Cloudflare uses one complete system instruction with a JSON-capable science default with thinking disabled',()=>{
+test('Cloudflare uses one complete system instruction with a JSON-capable science default with low reasoning',()=>{
   const provider=providerSettings({AI_PROVIDER:'cloudflare'});
   const p=prepareRequest(validateInput({messages:[{role:'user',content:'İki farklı kimya araştırma fikri öner'}]}),false,provider.quotaEnv);
   const wire=providerPayload(p,provider);
-  assert.equal(wire.model,'@cf/qwen/qwen3-30b-a3b-fp8');
-  assert.equal(wire.reasoning_effort,undefined); assert.equal(wire.messages.filter(m=>m.role==='system').length,1);
+  assert.equal(wire.model,'@cf/openai/gpt-oss-120b');
+  assert.equal(wire.reasoning_effort,'low'); assert.equal(wire.messages.filter(m=>m.role==='system').length,1);
   assert.match(wire.messages[0].content,/Sen BALKIZ/); assert.match(wire.messages[0].content,/Başvuru notları/);
 });
