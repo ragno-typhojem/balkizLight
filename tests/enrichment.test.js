@@ -90,7 +90,7 @@ test('chemistry output rejects unsupported doses and observed carbonate/thiocyan
   const {validateAndRender}=await import('../lib/output.js');
   const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'Kimya konusunu açıkla'}],settings:{domain:'chemistry',task:'explain'}}));
   assert.equal(prepared.experimentCard,false);
-  for(const reply of ['Sodyum karbonat ve kalsiyum klorür karışımında CO2 gazı çıkar.','Demir tiyosiyanat manyetik bir çökelti oluşturur.','5 g kalsiyum klorürü 50 mL suya ekle ve karıştır.']) assert.throws(()=>validateAndRender(JSON.stringify({reply}),prepared));
+  for(const reply of ['Kalsiyum bikarbonat çökelmesi kristal oluşturur.','Magnezyum sülfat ile alüminyum sülfat çapraz bağlanarak jel oluşturur.','Sodyum karbonat ve kalsiyum klorür karışımında CO2 gazı çıkar.','Demir tiyosiyanat manyetik bir çökelti oluşturur.','5 g kalsiyum klorürü 50 mL suya ekle ve karıştır.']) assert.throws(()=>validateAndRender(JSON.stringify({reply}),prepared));
   assert.doesNotThrow(()=>validateAndRender(JSON.stringify({reply:'Kalsiyum klorür ve sodyum bikarbonat için öğretmenin hazırladığı etiketli eğitim çözeltilerini kullan; gözlemi su kontrolleriyle karşılaştır.'}),prepared));
 });
 

@@ -1,4 +1,4 @@
-# BALKIZ Light 2.9.7 · Atölye
+# BALKIZ Light 2.9.8 · Atölye
 
 Sade ana ekran: üç başlangıç, dosya ve mesaj. Yaş, süre/katılımcı ve malzeme drawer içinde; diğer tercihler ayrıca açılır. Kalıcı BALKIZ ve İLKYAR işaretleri korunur. Açık tema sıcak kâğıt/yeşil, koyu tema koyu botanik renkleri kullanır. Cihazda Comic Sans MS varsa kullanılır; yoksa birlikte dağıtılan OFL lisanslı Comic Neue kullanılır. Yazıtipi için üçüncü tarafa istek yapılmaz.
 

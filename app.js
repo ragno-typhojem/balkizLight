@@ -1,14 +1,14 @@
 import { listingsFor, PROCUREMENT_DATE } from './lib/procurement.js';
 import { conversationConstraints } from './lib/constraints.js';
 import { turnSettings } from './lib/conversation-state.js';
-import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.7';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.8';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.7';
-import { TEMPLATES } from './lib/templates.js?v=2.9.7';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.7';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.7';
-import { readSSE } from './lib/sse.js?v=2.9.7';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.8';
+import { TEMPLATES } from './lib/templates.js?v=2.9.8';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.8';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.8';
+import { readSSE } from './lib/sse.js?v=2.9.8';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -520,7 +520,7 @@ function renderIdeas() {
   const words = normalize($('#idea-search').value).split(/\s+/).filter(Boolean);
   $('#ideas-description').textContent = `${EXPERIMENT_BANK.length} kaynaklarla ilişkili araştırma başlangıcı. Serbest sohbet bu havuzla sınırlı değildir. Kotasız açılır; yeni uygulama öğretmen ön denemesi gerektirir.`;
   const list = $('#idea-list'); list.replaceChildren();
-  for (const card of EXPERIMENT_BANK.filter(card => words.every(word => normalize(`${card.title} ${card.question} ${activityLabel(card.domain)} ${card.materials.map(id => MATERIALS.find(item => item.id === id)?.name).join(' ')}`).includes(word)))) {
+  for (const card of EXPERIMENT_BANK.filter(card => words.every(word => normalize(`${card.title} ${card.question} ${card.principle} ${card.variation} ${activityLabel(card.domain)} ${card.materials.map(id => MATERIALS.find(item => item.id === id)?.name).join(' ')}`).includes(word)))) {
     const node = document.createElement('article'); node.className = 'template-card';
     node.innerHTML = `<span class="template-category">${escapeHTML(activityLabel(card.domain))} · ${card.minAge}+ yaş${card.difficulty === 'advanced' ? ' · İleri araştırma' : ''}</span><h3>${escapeHTML(card.title)}</h3><p>${escapeHTML(card.question)}</p>`;
     const open = document.createElement('button'); open.textContent = 'Kotasız aç'; open.onclick = () => {
