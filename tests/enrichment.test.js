@@ -102,3 +102,8 @@ test('multiple idea output has independent numbered questions rather than unsoli
   const text=validateAndRender(JSON.stringify({ideas}),p);assert.match(text,/### 1. İletkenlik/);assert.match(text,/### 2. Aljinat/);
   assert.throws(()=>validateAndRender(JSON.stringify({ideas:ideas.slice(0,1)}),p));
 });
+
+test('another research idea stays brief without forcing a full preparation recipe',()=>{
+  const p=prepareRequest(validateInput({messages:[{role:'user',content:'Başka kimya araştırması öner'}],settings:{domain:'chemistry'}}));
+  assert.equal(p.novel,true); assert.equal(p.experimentCard,false); assert.equal(p.ideaOutput,true); assert.equal(p.ideaCount,1);
+});
