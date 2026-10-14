@@ -16,3 +16,11 @@ test('NVIDIA requests use documented fields while science remains locally valida
   assert.match(payload.messages[1].content,/JSON alan sözleşmesi/);
   assert.equal(providerQuotaHeaders(new Headers({'retry-after':'7','x-ratelimit-remaining-requests':'0'}),provider).get('x-ratelimit-remaining-requests'),null);
 });
+
+test('Cloudflare GPT-OSS retains low reasoning while Qwen keeps no-think without unsupported effort values',()=>{
+  const provider=providerSettings({AI_PROVIDER:'cloudflare'});
+  const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'Kimya için iki araştırma fikri öner'}]}),false,provider.quotaEnv);
+  const payload=providerPayload(prepared,provider); assert.equal(payload.reasoning_effort,'low');
+  const economy=providerPayload({...prepared,payload:{...prepared.payload,model:'@cf/qwen/qwen3-30b-a3b-fp8'}},provider);
+  assert.equal(economy.reasoning_effort,undefined); assert.match(economy.messages.at(-1).content,/no_think/);
+});

@@ -1,14 +1,14 @@
 import { listingsFor, PROCUREMENT_DATE } from './lib/procurement.js';
 import { conversationConstraints } from './lib/constraints.js';
 import { turnSettings } from './lib/conversation-state.js';
-import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.1';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.2';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.1';
-import { TEMPLATES } from './lib/templates.js?v=2.9.1';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.1';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.1';
-import { readSSE } from './lib/sse.js?v=2.9.1';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.2';
+import { TEMPLATES } from './lib/templates.js?v=2.9.2';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.2';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.2';
+import { readSSE } from './lib/sse.js?v=2.9.2';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';

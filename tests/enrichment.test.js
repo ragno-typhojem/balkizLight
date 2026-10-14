@@ -66,3 +66,10 @@ test('static package excludes server policy, provider internals and secrets but 
   const css=await readFile('styles.css','utf8');assert.match(css,/Comic Sans MS/);assert.match(css,/prefers-reduced-motion/);
   for(const file of ['knowledge.js','proposal-context.js','policy.js'])assert.ok(!/from\s+['"][^'"]+\?v=/.test(await readFile(`lib/${file}`,'utf8')));
 });
+
+test('without clauses exclude both named activities rather than retrieving forbidden manuals',()=>{
+  const constraints=conversationConstraints([{role:'user',content:'Kimya için asit baz ve gıda boyası olmadan iki fikir öner.'}]);
+  assert.ok(constraints.excluded.includes('acid-base')); assert.ok(constraints.excluded.includes('food-dye'));
+  const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'Kimya için asit baz ve gıda boyası olmadan iki fikir öner.'}],settings:{domain:'chemistry'}}));
+  assert.ok(!prepared.sources.some(source=>/asit|indikatör/i.test(source.title)));
+});

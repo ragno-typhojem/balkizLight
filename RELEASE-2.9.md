@@ -1,4 +1,4 @@
-# BALKIZ Light 2.9.1 · Atölye
+# BALKIZ Light 2.9.2 · Atölye
 
 Sade ana ekran: üç başlangıç, dosya ve mesaj. Yaş, süre/katılımcı ve malzeme drawer içinde; diğer tercihler ayrıca açılır. Kalıcı BALKIZ ve İLKYAR işaretleri korunur. Açık tema sıcak kâğıt/yeşil, koyu tema koyu botanik renkleri kullanır. Cihazda Comic Sans MS varsa kullanılır; yoksa birlikte dağıtılan OFL lisanslı Comic Neue kullanılır. Yazıtipi için üçüncü tarafa istek yapılmaz.
 
@@ -19,3 +19,5 @@ Serbest sohbet AI ile sürer; hazır havuz açıkça seçilir ve sıfır token k
 ## Doğrulama
 
 Otomatik testler: sohbet belleği, dışlamalar, kota/fallback, JSON tamamlanması, yerel öneriler, referans/malzeme bütünlüğü, bilgi bağlamı sınırları ve paket güvenliği. Ekran ve canlı API kontrolleri yayımlama sonrasında ayrıca raporlanır. Fiziksel deneyler uygulanmadı; taslaklar öğretmen ön denemesi gerektirir.
+
+Cloudflare GPT-OSS isteklerinde düşünme düzeyi artık iletilir; sessizce orta düzeye dönülmez. “Olmadan” dışlaması hem kaynak seçimini hem çıktı kontrolünü etkiler. Kesilmiş yanıtlar yine gösterilmez.
