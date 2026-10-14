@@ -135,3 +135,10 @@ test('observed open-flame research suggestion is rejected before display',async(
   assert.throws(()=>validateAndRender(JSON.stringify({ideas:[{title:'Yanma hızı',question:'Hava akımı etkisi?',mechanism:'Küçük bir ateş kaynağı kullanılır.',measurement:'Alev yüksekliği ölçülür.',safety:'Gözlük tak.'}]}),p));
   assert.match(p.payload.messages.at(-1).content,/dayanak mekanizma:/);
 });
+
+test('reply text must contain an answer rather than an echoed schema',async()=>{
+ const {validateAndRender}=await import('../lib/output.js');
+ const p=prepareRequest(validateInput({messages:[{role:'user',content:'Polarizasyon kılavuzu yaz'}],settings:{domain:'physics'}}),false,{AI_PROVIDER:'cloudflare'});
+ assert.throws(()=>validateAndRender(JSON.stringify({reply:JSON.stringify({type:'object',properties:{reply:{type:'string'}},required:['reply']})}),p));
+ assert.ok(!p.payload.messages.some(m=>m.content.includes('alan sözleşmesine uygun veri')));
+});
