@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-  <meta name="theme-color" content="#175a4c">
+  <meta name="theme-color" content="#f5f2ed">
   <meta name="description" content="İLKYAR gönüllüleri için bilim etkinliği geliştirme atölyesi. Yaşa uygun planlar, kaynak notları ve güvenlik kontrolü.">
   <title>BALKIZ Light · Etkinlik atölyesi</title>
   <link rel="icon" href="/assets/balkiz-mark.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/styles.css?v=2.8.0">
+  <script src="/theme-init.js"></script>
+  <link rel="stylesheet" href="/styles.css?v=2.9.0">
   <script src="/vendor/marked.umd.js" defer></script>
-  <script type="module" src="/app.js?v=2.8.0"></script>
+  <script type="module" src="/app.js?v=2.9.0"></script>
 </head>
 <body>
   <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -41,8 +42,8 @@
       <nav class="history" id="history" aria-label="Kaydedilmiş çalışmalar"></nav>
       <div class="sidebar-footer">
         <div class="local-note"><span class="small-dot"></span> Bu cihazda saklanır</div>
-        <div class="footer-tools"><button id="theme" class="nav-button"><svg><use href="#i-moon"/></svg> Görünüm</button><button id="backup" class="nav-button"><svg><use href="#i-down"/></svg> Yedekle</button></div>
-        <button id="import-open" class="text-button">Yedek yükle</button> <span class="separator">·</span> <button id="clear-history" class="text-button">Geçmişi temizle</button>
+        <button id="theme" class="nav-button"><svg><use href="#i-moon"/></svg> Görünüm</button><details class="storage-tools"><summary>Çalışmalarını yönet</summary><button id="backup" class="nav-button"><svg><use href="#i-down"/></svg> Yedekle</button>
+        <button id="import-open" class="text-button">Yedek yükle</button> <span class="separator">·</span> <button id="clear-history" class="text-button">Geçmişi temizle</button></details>
         <p class="credit">© <span id="year">2026</span> Mustafa Berke Şimşekler</p>
       </div>
     </aside>
@@ -61,26 +62,16 @@
             <form class="composer" id="composer">
               <label class="sr-only" for="input">Etkinlik fikrini veya bilim sorunu yaz</label>
               <textarea id="input" rows="2" maxlength="16000" placeholder="Bir fikir, bir soru, bir keşif…" aria-describedby="science-note file-note"></textarea>
-              <div class="composer-toolbar"><div class="composer-options"><button id="attach" class="icon-button" type="button" aria-label="Dosya ekle" title="PDF, DOCX veya metin ekle"><svg><use href="#i-plus"/></svg></button><label class="sr-only" for="task">Çalışma türü</label><select id="task"><option value="auto">Birlikte geliştir</option><option value="ideas">Fikir üret</option><option value="experiment">Deney tasarla</option><option value="guide">Kılavuz yaz</option><option value="explain">Konuyu açıkla</option><option value="review">Bilgiyi değerlendir</option><option value="edit">Metni düzenle</option></select><span class="file-note" id="file-note">PDF, DOCX, metin</span></div><button class="send-button" id="send" type="submit" aria-label="Mesajı gönder" disabled><svg><use href="#i-arrow"/></svg></button></div>
+              <div class="composer-toolbar"><div class="composer-options"><button id="attach" class="icon-button" type="button" aria-label="Dosya ekle" title="PDF, DOCX veya metin ekle"><svg><use href="#i-plus"/></svg></button><span class="file-note" id="file-note">Dosya ekleyebilirsin</span></div><button class="send-button" id="send" type="submit" aria-label="Mesajı gönder" disabled><svg><use href="#i-arrow"/></svg></button></div>
             </form>
             <p class="science-note" id="science-note"><svg><use href="#i-shield"/></svg><span>BALKIZ hata yapabilir. Bilgiyi ve deney güvenliğini bir öğretmenle kontrol et.</span></p>
             <div class="composer-caption"><span id="save-status">Bu cihazda otomatik kaydedilir</span><span id="mode-status">Otomatik · ekonomik</span></div>
           </div>
         </section>
         <aside class="context-panel" id="context-panel" aria-label="Etkinlik ayarları">
-          <div class="context-header"><span class="eyebrow">BİRLİKTE PLANLAYALIM</span><button id="close-context" class="icon-button context-close" aria-label="Ayarları kapat"><svg><use href="#i-close"/></svg></button></div>
-          <h2>Etkinlik çerçevesi</h2><p class="context-description">Küçük ayrıntılar, daha iyi bir plan.</p>
-          <form id="settings-form" class="settings-form">
-            <label for="engine">Yanıt yolu</label><select id="engine"><option value="auto">Akıllı sohbet · çalışmayı sürdür</option><option value="local">Yalnız hazır havuz · 0 token</option><option value="ai">Yapay zekâ · kota kullanır</option></select><label for="memory">Yerel havuzda karşılaştırma</label><select id="memory"><option value="current">Bu çalışma</option><option value="device">Bu cihazdaki çalışmalar · yerel</option></select>
-            <label for="aiProfile">Yapay zekâ kullanımı</label><select id="aiProfile"><option value="economy">Ekonomik · göreve göre seçim</option><option value="research">Ayrıntılı bilimsel çalışma</option></select>
-            <label for="domain">Etkinlik alanı</label><select id="domain"><option value="general">Birlikte seçelim</option></select>
-            <label for="age">Yaş grubu</label><select id="age"><option value="6–8">6–8 yaş</option><option value="9–12" selected>9–12 yaş</option><option value="13–15">13–15 yaş</option><option value="16+">16 yaş ve üzeri</option></select>
-            <label for="difficulty">Gönüllü için bilimsel derinlik</label><select id="difficulty"><option value="intro">Başlangıç · keşfet</option><option value="intermediate" selected>Araştırma · karşılaştır ve ölç</option><option value="advanced">İleri · model, hesap ve belirsizlik</option></select>
-            <div class="field-pair"><div><label for="duration">Süre · dakika</label><input id="duration" type="number" min="10" max="180" step="5" value="40"></div><div><label for="participants">Katılımcı</label><input id="participants" type="number" min="1" max="200" value="20"></div></div>
-            <label for="procurement">Malzeme erişimi</label><select id="procurement"><option value="obtainable">Uygun ürün ve kimyasalları tedarik edebiliriz</option><option value="owned">Yalnız elimizdeki malzemeler</option></select>
-            <label for="materials">Malzemeler / erişim sınırları <span>isteğe bağlı</span></label><textarea id="materials" rows="3" maxlength="600" placeholder="Örn. etiketli eğitim reaktifleri, iletkenlik ölçer, optik filtre, sınırlı bütçe…"></textarea>
-            <label for="format">Kılavuz formatı</label><select id="format"><option value="ilkyar">Etkinlik arşivi düzeni</option><option value="research">Araştırma / deney düzeni</option></select>
-            <label for="detail">Yanıt uzunluğu</label><select id="detail"><option value="auto">Otomatik</option><option value="short">Kısa</option><option value="detailed">Ayrıntılı</option></select>
+          <div class="context-header"><span class="eyebrow">SANA GÖRE</span><button id="close-context" class="icon-button context-close" aria-label="Ayarları kapat"><svg><use href="#i-close"/></svg></button></div>
+          <h2>Çalışma tercihleri</h2><p class="context-description">İstersen ayarla. Sohbette de anlatabilirsin.</p>
+          <form id="settings-form" class="settings-form"><label for="age">Yaş grubu</label><select id="age"><option value="6–8">6–8 yaş</option><option value="9–12" selected>9–12 yaş</option><option value="13–15">13–15 yaş</option><option value="16+">16 yaş ve üzeri</option></select><div class="field-pair"><div><label for="duration">Süre · dakika</label><input id="duration" type="number" min="10" max="180" step="5" value="40"></div><div><label for="participants">Katılımcı</label><input id="participants" type="number" min="1" max="200" value="20"></div></div><label for="materials">Malzemeler / erişim sınırları <span>isteğe bağlı</span></label><textarea id="materials" rows="3" maxlength="600" placeholder="Örn. etiketli eğitim reaktifleri, iletkenlik ölçer, optik filtre, sınırlı bütçe…"></textarea><details class="advanced-settings"><summary>Diğer tercihler</summary><div class="advanced-fields"><label for="task">Çalışma türü</label><select id="task"><option value="auto">Birlikte geliştir</option><option value="ideas">Fikir üret</option><option value="experiment">Deney tasarla</option><option value="guide">Kılavuz yaz</option><option value="explain">Konuyu açıkla</option><option value="review">Bilgiyi değerlendir</option><option value="edit">Metni düzenle</option></select><label for="domain">Etkinlik alanı</label><select id="domain"><option value="general">Birlikte seçelim</option></select><label for="difficulty">Gönüllü için bilimsel derinlik</label><select id="difficulty"><option value="intro">Başlangıç · keşfet</option><option value="intermediate" selected>Araştırma · karşılaştır ve ölç</option><option value="advanced">İleri · model, hesap ve belirsizlik</option></select><label for="procurement">Malzeme erişimi</label><select id="procurement"><option value="obtainable">Uygun ürün ve kimyasalları tedarik edebiliriz</option><option value="owned">Yalnız elimizdeki malzemeler</option></select><label for="format">Kılavuz formatı</label><select id="format"><option value="ilkyar">Etkinlik arşivi düzeni</option><option value="research">Araştırma / deney düzeni</option></select><label for="detail">Yanıt uzunluğu</label><select id="detail"><option value="auto">Otomatik</option><option value="short">Kısa</option><option value="detailed">Ayrıntılı</option></select><label for="engine">Yanıt yolu</label><select id="engine"><option value="auto">Akıllı sohbet · çalışmayı sürdür</option><option value="local">Yalnız hazır havuz · 0 token</option><option value="ai">Yapay zekâ · kota kullanır</option></select><label for="aiProfile">Yapay zekâ kullanımı</label><select id="aiProfile"><option value="economy">Ekonomik · göreve göre seçim</option><option value="research">Ayrıntılı bilimsel çalışma</option></select><label for="memory">Yerel havuzda karşılaştırma</label><select id="memory"><option value="current">Bu çalışma</option><option value="device">Bu cihazdaki çalışmalar · yerel</option></select></div></details>
           </form>
           <div class="context-divider"></div>
           <div class="guidance"><div class="guidance-icon"><svg><use href="#i-shield"/></svg></div><h3>Merak özgür. Güvenlik önce.</h3><p>Yaşa uygunluk, yetişkin gözetimi ve malzeme riskleri her deney planının parçası.</p></div>
@@ -96,7 +87,7 @@
   <input type="file" id="import-file" accept=".json" hidden>
   <dialog id="materials-dialog" class="library-dialog" aria-labelledby="materials-title">
     <div class="dialog-top"><h2 id="materials-title">Malzemeler ve mağazalar</h2><button class="icon-button dialog-close" aria-label="Kapat"><svg><use href="#i-close"/></svg></button></div>
-    <p class="dialog-description">Kimyasal adları dahil erişim kanalları ve kullanım notları. Bağlantılar mağazaların webdeki arama sonuçlarını açar; canlı stok, fiyat ve ürün güvenliği doğrulanmaz. Alım yapılmaz.</p>
+    <p class="dialog-description">Kimyasal adları dahil erişim kanalları ve kullanım notları. Araştırılmış ürün sayfaları ve alternatif arama bağlantıları. Tarihli ilan notları canlı stok veya uygunluk garantisi değildir; alım yapılmaz.</p>
     <div class="library-filters"><div><label for="material-search">Malzeme ara</label><input id="material-search" type="search" maxlength="100" placeholder="Gliserin, aljinat, nişasta, filtre…"></div><div><label for="material-store">Mağaza</label><select id="material-store"></select></div></div>
     <p id="material-results" class="library-results" role="status"></p><div id="material-list" class="template-list"></div>
   </dialog>

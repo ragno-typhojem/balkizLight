@@ -10,7 +10,7 @@ test('simple science uses the economy model while safety and advanced work retai
     assert.ok(isScientific(body));
     assert.equal(prepareRequest(body, true).model, question.includes('Sirke') ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b');
     assert.ok(prepareRequest(body, true).maxTokens <= prepareRequest(body).maxTokens);
-    assert.match(prepareRequest(body, true).payload.messages[0].content, /Güvenlik/);
+    assert.match(prepareRequest(body, true).payload.messages[0].content, /güvenlik/i);
   }
   assert.equal(prepareRequest(input('Davet metnimi sadeleştir', { task: 'edit' })).model, 'openai/gpt-oss-20b');
 });

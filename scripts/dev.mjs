@@ -6,7 +6,7 @@ import handler from '../api/chat.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const port = Number(process.env.PORT || 3000);
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const config = JSON.parse(await readFile(resolve(root, 'vercel.json'), 'utf8'));
 const server = http.createServer(async (req, res) => {
   const controller = new AbortController();
@@ -35,7 +35,7 @@ const server = http.createServer(async (req, res) => {
     }
     const pathname = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
     const path = resolve(root, `.${pathname}`);
-    const allowed = ['/index.html', '/styles.css', '/app.js', '/sw.js', '/manifest.webmanifest'].includes(pathname) || /^\/(assets|vendor|lib)\//.test(pathname);
+    const allowed = ['/theme-init.js', '/index.html', '/styles.css', '/app.js', '/sw.js', '/manifest.webmanifest'].includes(pathname) || /^\/(assets|vendor|lib)\//.test(pathname);
     if (!allowed || !path.startsWith(root + sep) || pathname.includes('..')) { res.writeHead(404); res.end('Not found'); return; }
     const content = await readFile(path); res.setHeader('Content-Type', `${types[extname(path)] || 'application/octet-stream'}; charset=utf-8`);
     res.setHeader('Cache-Control', 'no-cache'); res.end(content);

@@ -1,13 +1,14 @@
+import { listingsFor, PROCUREMENT_DATE } from './lib/procurement.js';
 import { conversationConstraints } from './lib/constraints.js';
 import { turnSettings } from './lib/conversation-state.js';
-import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.8.0';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.0';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.8.0';
-import { TEMPLATES } from './lib/templates.js?v=2.8.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.8.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.8.0';
-import { readSSE } from './lib/sse.js?v=2.8.0';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.0';
+import { TEMPLATES } from './lib/templates.js?v=2.9.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.0';
+import { readSSE } from './lib/sse.js?v=2.9.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -125,15 +126,15 @@ function history() {
 }
 
 const IDEAS = [
-  { icon: 'spark', title: 'Bir etkinlik tasarla', text: 'Bir fikri uygulanabilir bir akışa dönüştür.', query: 'Kolay bulunan malzemelerle merak uyandıran bir bilim etkinliği planla.', task: 'plan', domain: 'science' },
-  { icon: 'flask', title: 'Bir deney geliştir', text: 'Gözlemle, sorgula, güvenle keşfet.', query: 'Sirke ve karbonat tepkimesini çocuklara anlatan düşük riskli, açık kapta bir gözlem etkinliği hazırla. Güvenlik ve bilimsel açıklamayı ekle.', task: 'plan', domain: 'chemistry' },
-  { icon: 'book', title: 'Bir konuyu açıkla', text: 'Karmaşık bilgiyi çocukların diline çevir.', query: 'Ay’ın evrelerini çocuklara basit bir modelle açıkla. Yaygın yanlış anlamaları ve modelin sınırlarını belirt.', task: 'explain', domain: 'astronomy' },
-  { icon: 'check', title: 'Bir adım ileri taşı', text: 'Yeni fikirler, ölçümler ve farklı yollar keşfet.', query: 'Çocukların kendi hipotezlerini kurabileceği üç düşük riskli deney fikri öner. Her fikrin sınanabilir sorusunu, ölçülecek değişkenini ve neden ilginç olduğunu kısaca açıkla.', task: 'ideas', domain: 'science' },
+  { icon: 'spark', title: 'Yeni bir fikir', text: 'Alışılmışın dışına birlikte çıkalım.', query: 'Evdeki malzemelerle sınırlanmadan, eğitim reaktifleri ve ölçüm araçlarını da düşünerek üç farklı mekanizmaya dayalı etkinlik fikri öner. Soru, ölçüm ve neden ilginç olduğunu kısaca yaz.', task: 'ideas', domain: 'science' },
+  { icon: 'flask', title: 'Birlikte geliştirelim', text: 'Fikrini anlat, bir adım ileri taşıyalım.', query: '', task: 'auto', domain: 'general' },
+  { icon: 'book', title: 'Kılavuz hazırlayalım', text: 'Hazır olduğunda uygulanabilir bir akış.', query: 'Kılavuzunu hazırlamak istediğim etkinlik: ', task: 'guide', domain: 'general' },
 ];
+const greeting = () => { const hour = new Date().getHours(); return hour < 6 ? 'İyi geceler.' : hour < 12 ? 'Günaydın.' : hour < 18 ? 'Merhaba.' : 'İyi akşamlar.'; };
 function welcome() {
-  e.thread.innerHTML = `<div class="welcome"><div class="welcome-kicker"><span class="small-dot"></span> BİRLİKTE ÖĞRENELİM</div><h1>Küçük bir merak,<br><span>büyük bir keşif.</span></h1><p class="welcome-copy">Çocukların sorularından ilham al. Bilimden sanata etkinlik fikrini paylaş; yaşa uygun, anlaşılır ve uygulanabilir bir plan geliştirelim.</p><div class="welcome-grid">${IDEAS.map((idea, index) => `<button class="idea-card" data-idea="${index}"><div class="idea-icon${index % 2 ? ' warm' : ''}">${icon(idea.icon)}</div><span class="card-arrow">↗</span><b>${idea.title}</b><small>${idea.text}</small></button>`).join('')}</div><p class="topic-label">YA DA BİR ALANDAN BAŞLA</p><div class="topic-chips">${[['physics','Fizik / Fen'],['chemistry','Kimya'],['ai','Yapay zekâ'],['astronomy','Astronomi'],['drama','Yaratıcı drama'],['origami','Origami']].map(([domain, title]) => `<button class="topic-chip" data-domain="${domain}" aria-pressed="${$('#domain').value === domain}">${title}</button>`).join('')}</div><button class="welcome-library" data-library>${icon('book')} ${ACTIVITY_AREAS.length} başlıkta ${TEMPLATES.length} hazır taslağa göz at <span>↗</span></button></div>`;
+  e.thread.innerHTML = `<div class="welcome"><div class="welcome-orbit" aria-hidden="true"><span></span><span></span><span></span><img src="/assets/balkiz-mark.svg" alt="" width="64" height="64"></div><div class="welcome-kicker">${greeting()} Burada olman güzel.</div><h1>Bugün hangi merakın<br><span>peşinden gidelim?</span></h1><p class="welcome-copy">Bir soru ya da yarım kalmış bir fikir yeter.<br>Bilimden sanata, birlikte yeni bir yol bulalım.</p><div class="welcome-grid">${IDEAS.map((idea, index) => `<button class="idea-card" data-idea="${index}"><div class="idea-icon">${icon(idea.icon)}</div><b>${idea.title}</b><small>${idea.text}</small><span class="card-arrow">↗</span></button>`).join('')}</div><details class="welcome-explore"><summary>Bir alandan başlamak ister misin?</summary><div class="topic-chips">${[['physics','Fizik / Fen'],['chemistry','Kimya'],['ai','Yapay zekâ'],['astronomy','Astronomi'],['drama','Yaratıcı drama'],['origami','Origami']].map(([domain, title]) => `<button class="topic-chip" data-domain="${domain}" aria-pressed="${$('#domain').value === domain}">${title}</button>`).join('')}</div><button class="welcome-library" data-library>${icon('book')} Etkinlik kütüphanesini keşfet <span>↗</span></button></details></div>`;
   e.thread.querySelectorAll('[data-idea]').forEach(button => button.onclick = () => {
-    const idea = IDEAS[Number(button.dataset.idea)]; e.input.value = idea.query; $('#task').value = idea.task; $('#domain').value = idea.domain; settingsChanged(); grow(); e.input.focus();
+    const idea = IDEAS[Number(button.dataset.idea)]; e.input.value = idea.query; e.input.placeholder = idea.query ? 'Bir fikir, bir soru, bir keşif…' : 'Etkinliğini ya da aklındaki fikri anlat…'; $('#task').value = idea.task; $('#domain').value = idea.domain; settingsChanged(); grow(); e.input.focus();
   });
   e.thread.querySelectorAll('[data-domain]').forEach(button => button.onclick = () => {
     $('#domain').value = button.dataset.domain; settingsChanged(); e.input.focus();
@@ -153,6 +154,7 @@ function addMessage(message) {
     if (message.meta) responseMeta(article, message.meta);
     if (message.content && message.status !== 'pending' && !message.meta?.truncated) responseControls(article, message);
   }
+  if (e.thread.querySelector('.welcome')) { e.thread.replaceChildren(); document.body.classList.add('is-conversing'); }
   e.thread.append(article); return article;
 }
 function responseMeta(article, meta) {
@@ -180,17 +182,18 @@ function responseControls(article, message) {
     try { await navigator.clipboard.writeText(`${message.content}\n\n${DISCLAIMER}`); toast('Yanıt kopyalandı.'); } catch { toast('Kopyalama izni yok. Yanıt metnini seçip kopyalayabilirsin.'); }
   };
   const download = document.createElement('button'); download.innerHTML = `${icon('down')} İndir`; download.onclick = () => downloadBlob(`${message.content}\n\n---\n${DISCLAIMER}`, 'balkiz-etkinlik.md', 'text/markdown;charset=utf-8');
-  controls.append(copy, download);
+  const more = document.createElement('details'); more.className = 'response-more'; const summary = document.createElement('summary'); summary.textContent = 'Diğer işlemler'; more.append(summary, download); controls.append(copy, more);
   for (const [label, prompt] of [['Yapay zekâyla derinleştir', 'Yapay zekâyla bu son etkinliği bilimsel kaynaklara ve seçtiğim derinliğe göre geliştir. Yalnız yeni katkıları yaz; ölçülmüş sonuç uydurma.'], ['Farklı deney', 'Önceki deneyleri tekrarlamadan, farklı bir araştırma sorusu ve farklı düzenek içeren başka bir deney öner. Aynı yaş ve süreyi koru.'], ['Bir adım ileri', 'Bu etkinliği bir adım ileri taşı: yeni bir araştırma sorusu ve bunu sınayabileceğimiz düşük riskli bir deney öner. Tüm planı tekrar yazma.'], ['Daha az malzeme', 'Aynı etkinliği daha az malzemeyle nasıl uygulayabiliriz? Yalnız değişiklikleri ve ilgili güvenliği yaz.'], ['Kılavuz oluştur', 'Bu konuşmada geliştirdiğimiz etkinliği seçili kılavuz formatında birleştir. Son değişiklikleri koru.']]) {
     const button = document.createElement('button'); button.textContent = label;
     button.onclick = () => { if (!canNavigate()) return; if (label === 'Yapay zekâyla derinleştir') { $('#engine').value = 'auto'; settingsChanged(); } e.input.value = prompt; draftByChat.set(active, prompt); grow(); e.input.focus(); };
-    controls.append(button);
+    (['Bir adım ileri', 'Kılavuz oluştur'].includes(label) ? controls : more).append(button);
   }
 }
 function render() {
   history(); e.thread.replaceChildren(); const chat = chats[active];
+  document.body.classList.toggle('is-conversing', Boolean(chat?.messages.length));
   $('#work-title').textContent = chat?.title || 'Yeni çalışma';
-  if (chat?.messages.length) chat.messages.forEach(addMessage); else welcome();
+  if (chat?.messages.length) chat.messages.forEach(message => { const article = addMessage(message); article.classList.add('restored'); }); else welcome();
   following = true; requestAnimationFrame(() => bottom()); renderFiles(); grow();
 }
 function nearBottom() { return e.scroll.scrollHeight - e.scroll.scrollTop - e.scroll.clientHeight < 90; }
@@ -263,7 +266,7 @@ async function send(retry = false, fromLibrary = false) {
     const last = chat.messages.at(-1); if (last?.role === 'assistant' && last.status !== 'done') { chat.messages.pop(); e.thread.lastElementChild?.remove(); }
   } else {
     const text = e.input.value.trim(); if (!text) return;
-    if (e.thread.querySelector('.welcome')) e.thread.replaceChildren();
+    if (e.thread.querySelector('.welcome')) { e.thread.replaceChildren(); document.body.classList.add('is-conversing'); }
     const user = { role: 'user', content: text, status: 'done', files: currentFiles.map(file => file.name) }; chat.messages.push(user); addMessage(user);
     if (chat.messages.length === 1) chat.title = text.replace(/\s+/g, ' ').slice(0, 46);
     chat.settings = getSettings(); chat.updatedAt = Date.now();
@@ -378,7 +381,7 @@ $('#theme').onclick = () => {
 let drawerReturnFocus;
 function closeDrawers() {
   e.sidebar.classList.remove('drawer-open'); $('#context-panel').classList.remove('drawer-open'); $('#scrim').hidden = true;
-  e.sidebar.inert = matchMedia('(max-width:720px)').matches; $('#context-panel').inert = matchMedia('(max-width:1000px)').matches;
+  e.sidebar.inert = matchMedia('(max-width:720px)').matches; $('#context-panel').inert = true;
   $('#menu').setAttribute('aria-expanded', 'false'); $('#context-toggle').setAttribute('aria-expanded', 'false');
   if (drawerReturnFocus) { drawerReturnFocus.focus(); drawerReturnFocus = null; }
 }
@@ -467,7 +470,7 @@ function renderSources(reset = true) {
     button.onclick = () => {
       if (!canNavigate()) return;
       const settings = getSettings(); $('#sources-dialog').close();
-      const chat = createChat({ ...settings, task: 'plan', domain: source.domain, materials: source.materials || settings.materials }); if (!chat) return;
+      const chat = createChat({ ...settings, task: 'auto', domain: source.domain, materials: source.materials || settings.materials }); if (!chat) return;
       chat.title = source.title; save(); render();
       e.input.value = source.kind === 'guide' ? `“${source.title}” etkinliğini yeni keşif soruları, farklı varyasyonlar ve seçtiğim bilimsel derinliğe uygun bir akışla geliştir.` : `“${source.title}” konusuyla seçtiğim yaş ve bilimsel derinliğe uygun yeni bir etkinlik oluştur.`;
       draftByChat.set(chat.id, e.input.value); grow(); e.input.focus();
@@ -483,10 +486,10 @@ $('#source-more').onclick = () => { sourceLimit += 24; renderSources(false); };
 window.addEventListener('online', () => { connection(); grow(); });
 window.addEventListener('offline', () => { connection(); grow(); toast('Çevrimdışı kütüphane ve kaydedilmiş çalışmalar kullanılabilir.'); });
 window.addEventListener('pagehide', () => save(true));
-try { document.documentElement.dataset.theme = localStorage.getItem(THEME) === 'dark' ? 'dark' : 'light'; } catch { /* defaults to light */ }
+try { document.documentElement.dataset.theme = localStorage.getItem(THEME) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch { /* defaults to light */ }
 $('#year').textContent = new Date().getFullYear();
 chats = load(); active = Object.values(chats).sort((a, b) => b.updatedAt - a.updatedAt)[0]?.id || '';
-if (active) { setSettings(chats[active].settings); render(); } else createChat();
+if (active) { setSettings(chats[active].settings); render(); if (chats[active].messages.length) toast(`${greeting()} Kaldığımız yerden devam edebiliriz.`); } else createChat();
 closeDrawers(); connection();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { /* online app remains usable */ });
 
@@ -502,6 +505,10 @@ function renderMaterials() {
     card.innerHTML = `<h3>${escapeHTML(item.name)}</h3><p>${escapeHTML(item.where)}</p><p class="source-warning">${escapeHTML(item.warning)}</p>`;
     const link = document.createElement('a'); link.className = 'source-develop'; link.href = marketLink(item.query,store); link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Mağazada araştır ↗';
     const add = document.createElement('button'); add.className = 'source-develop'; add.textContent = 'Malzemelerime ekle'; add.onclick = () => { if (!canNavigate()) return; const node = $('#materials'); const next = [node.value.trim(), item.name].filter(Boolean).join('; '); if (next.length > 600) { toast('Malzeme listesi dolu.'); return; } node.value = next; settingsChanged(); toast('Malzeme eklendi. Ürün uygunluğunu ayrıca kontrol et.'); };
+    for (const listing of listingsFor(item.id,store)) {
+      const note = document.createElement('p'); note.textContent = `${listing.note} (${PROCUREMENT_DATE} · ${listing.evidence})`; card.append(note);
+      const direct = document.createElement('a'); direct.className = 'source-develop'; direct.href=listing.url; direct.target='_blank'; direct.rel='noopener noreferrer'; direct.textContent = `${listing.notEquivalent ? 'Ürün farkını incele' : 'Araştırılmış ilan'} ↗`; card.append(direct);
+    }
     card.append(link,add); list.append(card);
   }
 }
