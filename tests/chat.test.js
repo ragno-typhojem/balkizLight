@@ -7,6 +7,25 @@ const request = (body = {}, extra = {}) => new Request('https://balkiz.test/api/
 const upstream = (text = 'Ay, Güneş ışığını yansıtır.', end = true, finish = 'stop') => Response.json({ choices: [{ message: { content: JSON.stringify({ reply: text }) }, finish_reason: finish }], usage: { total_tokens: 500 } });
 const events = async response => { const result = []; for await (const raw of readSSE(response.body)) result.push(JSON.parse(raw)); return result; };
 
+test('a refused primary request uses Groq once and preserves the science output contract', async()=>{
+  const calls=[];
+  const handler=createHandler({env:{AI_PROVIDER:'cloudflare',AI_FALLBACK:'groq',CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_KEY:'fake-cf-key',CLOUDFLARE_FREE_PLAN:'1',GROQ_API_KEY:'fake-groq-key'},fetchImpl:async(url,init)=>{
+    calls.push({url,payload:JSON.parse(init.body)});
+    return calls.length===1 ? new Response('quota',{status:429,headers:{'Retry-After':'7'}}) : upstream();
+  }});
+  const result=await events(await handler(request()));
+  assert.equal(calls.length,2); assert.match(calls[0].url,/api.cloudflare.com/); assert.match(calls[1].url,/api.groq.com/);
+  assert.equal(calls[1].payload.stream,false); assert.ok(result.some(event=>event.meta?.fallback)); assert.equal(result.at(-1).done,true);
+});
+test('a completed but unsafe primary answer is rejected without another generation',async()=>{
+  let calls=0;
+  const handler=createHandler({env:{AI_PROVIDER:'cloudflare',AI_FALLBACK:'groq',CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_KEY:'fake-cf-key',CLOUDFLARE_FREE_PLAN:'1',GROQ_API_KEY:'fake-groq-key'},fetchImpl:async()=>{
+    calls++; return upstream('Sodyum hidroksit ekle ve ısıt.');
+  }});
+  const result=await events(await handler(request()));
+  assert.equal(calls,1); assert.ok(result.some(event=>event.error)); assert.ok(!result.some(event=>event.delta));
+});
+
 test('private repeated requests are cached without another upstream call', async () => {
   let calls = 0; const handler = createHandler({ env: { GROQ_API_KEY: 'server-secret' }, fetchImpl: async (url, init) => {
     calls++; const payload = JSON.parse(init.body); assert.equal(payload.model, 'openai/gpt-oss-20b'); assert.equal(payload.include_reasoning, false); return upstream();

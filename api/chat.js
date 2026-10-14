@@ -5,7 +5,7 @@ import { validateInput, prepareRequest, InputError } from '../lib/policy.js';
 import { Governor, BusyError, quotaReset } from '../lib/governor.js';
 import { readSSE, encodeEvent } from '../lib/sse.js';
 import { DISCLAIMER, publicSource } from '../lib/knowledge.js';
-import { providerSettings, providerPayload, providerQuotaHeaders } from '../lib/providers.js';
+import { providerSettings, providerPayload, providerQuotaHeaders, fallbackStatus } from '../lib/providers.js';
 
 export const config = { runtime: 'edge' };
 const RESPONSE_HEADERS = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -38,9 +38,32 @@ async function readBody(request) {
   try { return JSON.parse(new TextDecoder().decode(all)); } catch { throw new InputError('Geçersiz JSON.'); }
 }
 
+async function admit(input, provider, governor, client) {
+  let prepared = prepareRequest(input, false, provider.quotaEnv), lease;
+  if (governor.pressure(prepared.model) || prepared.estimated > governor.limits.tpm) prepared = prepareRequest(input, true, provider.quotaEnv);
+  const available = governor.availableTokens(prepared.model);
+  if (available >= 1000 && available < prepared.estimated) {
+    try { prepared = prepareRequest(input, true, provider.quotaEnv, available); } catch (error) { if (!(error instanceof InputError)) throw error; }
+  }
+  try { lease = await governor.reserve(prepared.model, prepared.estimated, client); }
+  catch (error) {
+    if (error instanceof BusyError && error.status === 429 && (prepared.profile !== 'compact' || error.availableTokens >= 1000)) {
+      try { prepared = prepareRequest(input, true, provider.quotaEnv, error.availableTokens ?? governor.availableTokens(prepared.model)); } catch (packingError) { if (packingError instanceof InputError) throw error; throw packingError; }
+      lease = await governor.reserve(prepared.model, prepared.estimated, client);
+    } else throw error;
+  }
+  try {
+    if (lease.pressure && prepared.profile !== 'compact') prepared = prepareRequest(input, true, provider.quotaEnv);
+    return {prepared,lease};
+  } catch (error) { await lease.release(0); throw error; }
+}
+
 export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.now() } = {}) {
-  const provider = providerSettings(env);
-  const governor = new Governor({ env:provider.quotaEnv, fetchImpl, now });
+  const userBuckets = new Map(), active = new Map();
+  const primary = providerSettings(env), primaryGovernor = new Governor({ env:primary.quotaEnv, fetchImpl, now, userBuckets, active });
+  const backup = providerSettings({...env,AI_PROVIDER:'groq',FORCE_JSON_OUTPUT:primary.quotaEnv.FORCE_JSON_OUTPUT}), backupGovernor = new Governor({env:backup.quotaEnv,fetchImpl,now,userBuckets,active});
+  const canBackup = env.AI_FALLBACK === 'groq' && primary.name !== 'groq' && Boolean(backup.key) && !backup.error;
+  let unavailableUntil = 0;
   const cache = new Map(), inFlight = new Set();
   const cleanCache = () => {
     for (const [key, entry] of cache) if (entry.expires <= now()) cache.delete(key);
@@ -51,7 +74,9 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
     if (request.method !== 'POST') return json({ error: 'Yalnızca POST destekleniyor.' }, 405, { Allow: 'POST' });
     const origin = request.headers.get('origin');
     if (origin && origin !== new URL(request.url).origin) return json({ error: 'Bu kaynaktan istek kabul edilmiyor.' }, 403);
-    let lease, controller, cacheKey = '', lockHeld = false, upstreamStarted = false;
+    let lease, controller, prepared, cacheKey = '', lockHeld = false, upstreamStarted = false;
+    let provider = primary, governor = primaryGovernor, usedBackup = false;
+    const selectBackup = () => { provider = backup; governor = backupGovernor; usedBackup = true; };
     try {
       const input = validateInput(await readBody(request));
       const local = buildLocalReply(input);
@@ -69,6 +94,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
         } });
         return new Response(stream, { headers: { ...RESPONSE_HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8' } });
       }
+      if (canBackup && (provider.error || !provider.key || unavailableUntil > now())) selectBackup();
       if (provider.error || !provider.key) return json({ error: provider.error || 'Yapay zekâ henüz yapılandırılmamış. Sunucudaki API anahtarı ayarlanmalı.' }, 503);
       const client = await digest(request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown');
       cleanCache();
@@ -81,39 +107,52 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       if (cacheKey && inFlight.has(cacheKey)) throw new BusyError('Bu yanıt zaten hazırlanıyor. Birkaç saniye sonra tekrar deneyebilirsin.', 2, 409);
       if (request.signal.aborted) throw new BusyError('İstek iptal edildi.', 0, 499);
       if (cacheKey) { inFlight.add(cacheKey); lockHeld = true; }
-      let prepared = prepareRequest(input, false, provider.quotaEnv);
-      if (governor.pressure(prepared.model) || prepared.estimated > governor.limits.tpm) prepared = prepareRequest(input, true, provider.quotaEnv);
-      const available = governor.availableTokens(prepared.model);
-      if (available >= 1000 && available < prepared.estimated) {
-        try { prepared = prepareRequest(input, true, provider.quotaEnv, available); } catch (error) { if (!(error instanceof InputError)) throw error; }
-      }
-      try { lease = await governor.reserve(prepared.model, prepared.estimated, client); }
+      try { ({prepared,lease} = await admit(input,provider,governor,client)); }
       catch (error) {
-        if (error instanceof BusyError && error.status === 429 && (prepared.profile !== 'compact' || error.availableTokens >= 1000)) {
-          try { prepared = prepareRequest(input, true, provider.quotaEnv, error.availableTokens ?? governor.availableTokens(prepared.model)); } catch (packingError) { if (packingError instanceof InputError) throw error; throw packingError; }
-          lease = await governor.reserve(prepared.model, prepared.estimated, client);
-        } else throw error;
+        if (!canBackup || usedBackup || !error.fallbackEligible || request.signal.aborted) throw error;
+        selectBackup(); ({prepared,lease} = await admit(input,provider,governor,client));
       }
-      // The shared reservation also sees simultaneous requests on other instances.
-      if (lease.pressure && prepared.profile !== 'compact') prepared = prepareRequest(input, true, provider.quotaEnv);
       controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 55000);
       const onAbort = () => controller.abort();
       request.signal.addEventListener('abort', onAbort, { once: true });
       if (request.signal.aborted) controller.abort();
+      const fetchUpstream = async () => {
+        const call = async () => {
+          upstreamStarted = true;
+          const response = await fetchImpl(provider.endpoint, {
+            method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${provider.key}`},
+            body:JSON.stringify(providerPayload(prepared,provider)),signal:controller.signal,
+          });
+          governor.observe(prepared.model,providerQuotaHeaders(response.headers,provider),response.status,prepared.estimated);
+          return response;
+        };
+        let response = await call();
+        if (!response.ok && fallbackStatus(response.status) && canBackup && !usedBackup && !controller.signal.aborted) {
+          const wait = response.status === 429 ? quotaReset(providerQuotaHeaders(response.headers,provider),prepared.estimated) : 30000;
+          unavailableUntil = now() + Math.min(86400000,Math.max(1000,wait));
+          await response.body?.cancel(); await lease.release(0); lease = undefined;
+          if (controller.signal.aborted) throw new Error('aborted');
+          selectBackup(); ({prepared,lease} = await admit(input,provider,governor,client));
+          if (controller.signal.aborted) { await lease.release(0); throw new Error('aborted'); }
+          // One backup only. Failed/partial generations never enter this branch.
+          response = await call();
+        }
+        return response;
+      };
       let released = false;
       const finish = async usage => {
         if (released) return; released = true; clearTimeout(timeout);
         request.signal.removeEventListener('abort', onAbort);
         if (lockHeld) { inFlight.delete(cacheKey); lockHeld = false; }
-        await lease.release(usage);
+        await lease?.release(usage);
       };
       if (prepared.guarded) {
         const meta = {
           profile: prepared.profile, novel: prepared.novel, model: prepared.route === 'research' ? 'Bilimsel derinlik' : 'Ekonomik',
           trimmed: prepared.trimmed, partialFiles: prepared.partialFiles,
           sources: prepared.sources.map(publicSource), disclaimer: DISCLAIMER,
-          capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: false, excluded: prepared.constraints.labels,
+          capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: false, excluded: prepared.constraints.labels, fallback:usedBackup,
         };
         const events = new ReadableStream({
           async start(out) {
@@ -121,12 +160,8 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
             const send = event => out.enqueue(encodeEvent(event));
             try {
               send({ meta }); // First bytes arrive before model generation; no partial recipe is exposed.
-              upstreamStarted = true;
-              const response = await fetchImpl(provider.endpoint, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
-                body: JSON.stringify(providerPayload(prepared,provider)), signal: controller.signal,
-              });
-              governor.observe(prepared.model, providerQuotaHeaders(response.headers,provider), response.status, prepared.estimated);
+              const response = await fetchUpstream();
+              Object.assign(meta,{fallback:usedBackup,profile:prepared.profile,trimmed:prepared.trimmed,sources:prepared.sources.map(publicSource),capacity:governor.shared ? 'shared' : 'instance'});
               if (!response.ok) {
                 await response.body?.cancel(); charged = 0;
                 if (response.status === 429) {
@@ -151,7 +186,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
               send({ meta }); send({ delta: text }); send({ done: true, usage: Number.isFinite(total) ? { total, cached, charged } : null }); out.close();
             } catch (error) {
               controller.abort();
-              try { send({ error: error instanceof OutputError ? error.message : 'Yanıt durduruldu veya bağlantı kesildi; yarım deney tarifi gösterilmedi.', errorCode: 'output_rejected' }); out.close(); } catch { /* client disconnected */ }
+              try { send({ error: error instanceof OutputError || error instanceof BusyError ? error.message : 'Yanıt durduruldu veya bağlantı kesildi; yarım deney tarifi gösterilmedi.', errorCode: 'output_rejected', ...(error instanceof BusyError && error.retryAfter ? {retryAfter:error.retryAfter} : {}) }); out.close(); } catch { /* client disconnected */ }
             } finally { await finish(charged); }
           },
           async cancel() { controller.abort(); await finish(); },
@@ -160,16 +195,11 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       }
       let upstream;
       try {
-        upstreamStarted = true;
-        upstream = await fetchImpl(provider.endpoint, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
-          body: JSON.stringify(providerPayload(prepared,provider)), signal: controller.signal,
-        });
+        upstream = await fetchUpstream();
       } catch {
         controller.abort(); await finish();
         return json({ error: request.signal.aborted ? 'İstek iptal edildi.' : 'Yanıt süresi aşıldı veya servise ulaşılamadı. Tekrar deneyebilirsin.' }, request.signal.aborted ? 499 : 504);
       }
-      governor.observe(prepared.model, providerQuotaHeaders(upstream.headers,provider), upstream.status, prepared.estimated);
       if (!upstream.ok || !upstream.body) {
         await upstream.body?.cancel(); await finish(0);
         const wait = Math.max(1, Math.ceil(quotaReset(providerQuotaHeaders(upstream.headers,provider), prepared.estimated) / 1000));
@@ -180,7 +210,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
         profile: prepared.profile, novel: prepared.novel, model: prepared.route === 'research' ? 'Bilimsel derinlik' : 'Ekonomik',
         trimmed: prepared.trimmed, partialFiles: prepared.partialFiles,
         sources: prepared.sources.map(publicSource), disclaimer: DISCLAIMER,
-        capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: prepared.guarded, excluded: prepared.constraints.labels,
+        capacity: governor.shared ? 'shared' : 'instance', cached: false, checked: prepared.guarded, excluded: prepared.constraints.labels, fallback:usedBackup,
       };
       const stream = new ReadableStream({
         async start(out) {

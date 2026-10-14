@@ -1,4 +1,18 @@
-# API seçimi · 14 Ekim 2026
+# API seçimi · 14 Ekim 2026 · 2.8.0 güncel karar
+
+Ücretsiz canlı kullanım için Cloudflare Workers Free + Groq yedeği hazırlandı. Cloudflare günlük 10.000 neuron sağlar ve Free planı kotada işlemi reddeder; ücretli plan ayrıca açılmalıdır. Ekonomik Qwen3-30B-A3B-FP8 için milyon giriş/çıkış tokenı başına 4.625/30.475 neuron, araştırma GPT-OSS 120B için 31.818/68.182 neuron listelenir. Bu oranlar kullanım tahmini içindir; düşünme tokenları, gerçek istem/yanıt uzunluğu ve diğer hesap tüketimi sonucu değiştirir. Sayısal kullanıcı kapasitesi veya kalite üstünlüğü ölçülmedi.
+
+Cloudflare'ın ücretli faturalandırma gerektirdiğini belirttiği Kimi K2.6/K2.7, GLM 5.x ve DeepSeek V4 modelleri seçilmedi. Kod yalnız üç belgelenmiş Free uygun model ID'sine izin verir. Plan beyanı faturalandırma kontrolünün yerine geçmez; kullanıcı gerçek Workers Free hesabını bağlamalıdır.
+
+Vercel AI Gateway'in ücretsiz katmanı aylık 5 USD ve uygun modellerle sınırlıdır; ücretsiz günlük hesap kotası yerine aylık kredi sağlar. Hesabın ücretsiz kredisi/faturalandırma durumu görülemediği için otomatik etkinleştirilmedi. Satın alma veya otomatik bakiye yükleme yapılmadı.
+
+NVIDIA'da ücretsiz API vardır. Ancak güncel GPT-OSS 120B model sayfasında Free Endpoint Deprecated, GPT-OSS 20B sayfasında Available yazıyor. Önceki 120B ücretsiz varsayımı düzeltildi; NVIDIA şablonu 20B iç test/preview içindir. API Trial Terms 1.2 ve 1.4 iç test/değerlendirme ile gerçek üretim kullanımını ayırır.
+
+Kaynaklar: [Cloudflare fiyat/kota](https://developers.cloudflare.com/workers-ai/platform/pricing/), [OpenAI uyumlu Cloudflare API](https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/), [Qwen modeli](https://developers.cloudflare.com/workers-ai/models/qwen3-30b-a3b-fp8/), [GPT-OSS 120B modeli](https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/), [Qwen resmî non-thinking istemi](https://huggingface.co/Qwen/Qwen3-30B-A3B), [Vercel Gateway fiyatlandırması](https://vercel.com/docs/ai-gateway/pricing), [NVIDIA 20B](https://build.nvidia.com/openai/gpt-oss-20b), [NVIDIA 120B](https://build.nvidia.com/openai/gpt-oss-120b), [NVIDIA API Trial Terms](https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf).
+
+---
+
+# Önceki 2.7.0 karşılaştırması
 
 Bu karşılaştırmada güncel doğrudan belgeler arama motorunun eski özetlerinden önceliklidir. BALKIZ'ın yayımlanan sürümü varsayılan olarak Groq kullanır. NVIDIA sunucu bağlantısı isteğe bağlıdır; hesap, API anahtarı veya üretim lisansı bu kod değişikliğiyle verilmez.
 

@@ -1,4 +1,4 @@
-# BALKIZ Light 2.7 · Etkinlik atölyesi
+# BALKIZ Light 2.8 · Etkinlik atölyesi
 
 İLKYAR projelerinde etkinlik hazırlayan gönüllüler için hafif, Türkçe bir çalışma alanı. Mevcut BALKIZ Light reposunun güncellenmiş sürümüdür. Sabit BALKIZ logosu ve sağ üstte resmi İLKYAR logosu kullanılır.
 
@@ -20,6 +20,25 @@
 - Redis ayarlanmadan da çalışır; bu durumda kota, eşzamanlılık ve önbellek yalnızca o server instance’ına aittir. Instance’lar arasında kesin toplam sınır garantisi yoktur.
 
 Diğer ayarlar `.env.example` içinde. `.env.local` veya gerçek anahtarları repoya ekleme.
+
+## 2.8.0: ücretsiz birinci servis ve Groq yedeği
+
+Canlı yayın için önerilen bağlantı Cloudflare Workers AI / Workers Free, yedek Groq'tur. Cloudflare ücretsiz kullanımını günlük 10.000 neuron ile sınırlar; bu bir token veya kullanıcı sayısı değildir. Basit işlerde `@cf/qwen/qwen3-30b-a3b-fp8`, bilimsel deney ve araştırmada `@cf/openai/gpt-oss-120b` seçilir. Bu seçim fiyat/özellik belgelerine dayanır; Türkçe kalite testi yapılmadı. Neuron bütçesi hesapta bütün modellerce paylaşılır. Hesap Free planında olmalı; ücretli plana yükseltme veya kredi satın alma bu güncellemenin parçası değildir.
+
+Kolay kurulum:
+
+1. [Cloudflare resmî kurulumundan](https://developers.cloudflare.com/workers-ai/get-started/rest-api/) Workers AI → Use REST API bölümünü aç. Eğitim projesinin hesabıyla sınırlı token ve Account ID al.
+2. `config/cloudflare.env.example` dosyasının bir kopyasında yalnız `CLOUDFLARE_ACCOUNT_ID` ve `CLOUDFLARE_API_KEY` yer tutucularını doldur. Dosyayı bilgisayarında `.env` uzantısıyla kaydet; GitHub'a yükleme.
+3. Vercel proje Settings → Environment Variables bölümünde `.env` içe aktar veya metnini yapıştır. Production/Preview hedeflerini seç, kaydet ve yeniden deploy et. Mevcut `GROQ_API_KEY` kaydı korunur; şablon bu anahtarı boş değerle değiştirmez.
+4. `CLOUDFLARE_FREE_PLAN=1` yalnız kurulum beyanıdır; Cloudflare'da plan değiştirmez ve gerçek hesap faturalandırmasını denetlemez. Sıfır ek ücret için gerçek Workers Free hesabını kullan.
+
+`AI_FALLBACK=groq` ile birinci servisin erişim/kota hatası veya sunucu HTTP reddinde bir kez Groq'a geçilir. Her servis kendi kota rezervasyonundan geçer. Kullanıcı hız sınırı, genel eşzamanlılık ve ortak Redis hataları bu geçişle aşılmaz. İptal, bağlantı kopması, kesilmiş cevap veya bilimsel kontrole takılan üretilmiş yanıt tekrar üretilmez. İki servis de reddederse açık hata/bekleme süresi verilir. Aynı özel isteğin önbelleği korunur; yanıt yolu arayüzde yalnız BALKIZ olarak görünür.
+
+Cloudflare'da cevaplar tamamlanmış JSON olarak alınır ve yerel biçim/risk kontrolünden geçirilir; sağlayıcıda strict şema garantisi verilmez. Qwen ekonomik yoluna resmî `/no_think` istem işareti eklenir; bu sert bir sağlayıcı garantisi değildir. Groq dışında önbellek token indirimi varsayılmaz.
+
+NVIDIA **ücretsiz API sunar**; mevcut GPT-OSS 20B endpointi deneme için açıktır. Ücretsiz API Trial Terms 1.2/1.4, erişimi iç test/değerlendirmeyle sınırlar. `config/nvidia-preview.env.example` yalnız Preview/Development içindir. 120B ücretsiz endpointi güncel model sayfasında deprecated olduğundan NVIDIA varsayılanı 20B olarak düzeltildi. Gerçek üretim hakkı edinilmedikçe Vercel production ortamında evaluation bağlantısı kullanılmaz. `config/groq.env.example` eski bağlantıya dönmek içindir; hiçbir anahtarı silmez.
+
+Anahtarlar eklenene kadar mevcut Groq bağlantısı çalışır. Env içe aktarma ve gerçek model çıktısını kullanıcı doğrular. Yerel veya canlı test bu sürümde çalıştırılmadı.
 
 ## Ücretsiz kapasite nasıl korunur?
 
@@ -96,7 +115,7 @@ PDF.js ve fflate bu pakette lisanslarıyla hazırdır. Güncellemeleri yeniden k
 
 ## Bu sürümün teslim sınırı
 
-2.7.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
+2.8.0 kullanıcı isteğiyle araştırma ve kaynak incelemesiyle hazırlandı. Yerel test, tarayıcı testi, dev sunucusu, canlı sağlayıcı isteği veya yerel build çalıştırılmadı. Vercel Git entegrasyonu dağıtımı ayrıca derler; yayın durumu teslim sırasında GitHub Vercel durum kaydından kontrol edilir. API anahtarlarını kullanıcı Vercel ayarlarına ekler; kodun yayımlanması yeni sağlayıcıya başarılı istek yapıldığını kanıtlamaz.
 
 ## 2.3.0: birlikte geliştirme
 

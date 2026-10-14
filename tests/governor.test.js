@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Governor, parseReset, RESERVE_SCRIPT } from '../lib/governor.js';
+import { Governor, BusyError, parseReset, RESERVE_SCRIPT } from '../lib/governor.js';
+
+test('moving to a backup cannot reset the shared client rate budget',async()=>{
+  const userBuckets=new Map(),active=new Map(),env={USER_RPM:'1'};
+  const primary=new Governor({env,userBuckets,active}),backup=new Governor({env,userBuckets,active});
+  const lease=await primary.reserve('first-model',100,'same-client'); await lease.release(100);
+  await assert.rejects(backup.reserve('backup-model',100,'same-client'),error=>error instanceof BusyError && !error.fallbackEligible);
+});
 
 test('concurrency and per-client quotas release correctly', async () => {
   const governor = new Governor({ env: { MAX_CONCURRENT: '2', USER_RPM: '2' } });
