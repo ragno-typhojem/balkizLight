@@ -126,3 +126,12 @@ test('generic research suggestions use controlled measurable studies; unknown na
   assert.ok(realistic.controls&&realistic.measurement);
   assert.equal(proposalContext('Kuantum dolanıklık ölçümü','physics','',{excluded:[]},1800),'');
 });
+
+test('observed open-flame research suggestion is rejected before display',async()=>{
+  const {riskyRecipe,validateAndRender}=await import('../lib/output.js');
+  assert.equal(riskyRecipe('Bir mum veya küçük bir ateş kaynağı kullanılır. Alev yüksekliği ölçülür.'),true);
+  assert.equal(riskyRecipe('Yanma bir yükseltgenme sürecidir; bu etkinlikte alev kullanılmaz.'),false);
+  const p=prepareRequest(validateInput({messages:[{role:'user',content:'Başka kimya araştırması öner'}],settings:{domain:'chemistry'}}));
+  assert.throws(()=>validateAndRender(JSON.stringify({ideas:[{title:'Yanma hızı',question:'Hava akımı etkisi?',mechanism:'Küçük bir ateş kaynağı kullanılır.',measurement:'Alev yüksekliği ölçülür.',safety:'Gözlük tak.'}]}),p));
+  assert.match(p.payload.messages.at(-1).content,/dayanak mekanizma:/);
+});
