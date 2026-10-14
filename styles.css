@@ -117,3 +117,6 @@ button:active{transform:scale(.97)}button{transition:transform .18s var(--ease),
 @media(max-height:550px){.main-area{grid-template-rows:46px minmax(0,1fr)}.topbar{min-height:0}.workspace{padding:0 8px 6px}.workbar{min-height:40px;padding:0 12px}.workbar .icon-button{height:36px}.welcome-orbit{display:none}.welcome{padding:4px 0}.welcome h1{font-size:28px}.composer{padding:6px 9px}.composer textarea{max-height:65px;min-height:32px}.composer-toolbar{margin-top:0}.composer-region{padding-bottom:6px}.science-note,.composer-caption{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.idea-card:hover{transform:none}}
 @media print{.context-panel{display:none!important}.main-area,.workspace,.chat-panel{display:block}.workspace{padding:0}.message{animation:none}.thread{padding:0}}
+.response-notes summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:12px;color:var(--muted)}
+.response-notes[open]>div{margin-top:6px}.response-notes[open]{animation:reveal .2s var(--ease)}
+@media(prefers-reduced-motion:reduce){.response-notes[open]{animation:none}}

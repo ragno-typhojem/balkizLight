@@ -9,9 +9,9 @@
   <link rel="icon" href="/assets/balkiz-mark.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
   <script src="/theme-init.js"></script>
-  <link rel="stylesheet" href="/styles.css?v=2.9.0">
+  <link rel="stylesheet" href="/styles.css?v=2.9.1">
   <script src="/vendor/marked.umd.js" defer></script>
-  <script type="module" src="/app.js?v=2.9.0"></script>
+  <script type="module" src="/app.js?v=2.9.1"></script>
 </head>
 <body>
   <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -61,7 +61,7 @@
             <div id="file-list" class="file-list" aria-label="Eklenen dosyalar"></div>
             <form class="composer" id="composer">
               <label class="sr-only" for="input">Etkinlik fikrini veya bilim sorunu yaz</label>
-              <textarea id="input" rows="2" maxlength="16000" placeholder="Bir fikir, bir soru, bir keşif…" aria-describedby="science-note file-note"></textarea>
+              <textarea id="input" rows="1" maxlength="16000" placeholder="Bir fikir, bir soru, bir keşif…" aria-describedby="science-note file-note"></textarea>
               <div class="composer-toolbar"><div class="composer-options"><button id="attach" class="icon-button" type="button" aria-label="Dosya ekle" title="PDF, DOCX veya metin ekle"><svg><use href="#i-plus"/></svg></button><span class="file-note" id="file-note">Dosya ekleyebilirsin</span></div><button class="send-button" id="send" type="submit" aria-label="Mesajı gönder" disabled><svg><use href="#i-arrow"/></svg></button></div>
             </form>
             <p class="science-note" id="science-note"><svg><use href="#i-shield"/></svg><span>BALKIZ hata yapabilir. Bilgiyi ve deney güvenliğini bir öğretmenle kontrol et.</span></p>

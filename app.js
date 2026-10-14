@@ -1,14 +1,14 @@
 import { listingsFor, PROCUREMENT_DATE } from './lib/procurement.js';
 import { conversationConstraints } from './lib/constraints.js';
 import { turnSettings } from './lib/conversation-state.js';
-import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.0';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.1';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.0';
-import { TEMPLATES } from './lib/templates.js?v=2.9.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.0';
-import { readSSE } from './lib/sse.js?v=2.9.0';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.1';
+import { TEMPLATES } from './lib/templates.js?v=2.9.1';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.1';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.1';
+import { readSSE } from './lib/sse.js?v=2.9.1';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -160,21 +160,22 @@ function addMessage(message) {
 function responseMeta(article, meta) {
   article.querySelector('.response-label').textContent = meta.profile === 'local' ? '· Yerel geliştirme · 0 token' : meta.local ? '· Malzeme bilgisi gerekli' : meta.profile === 'template' ? '· Hazır taslak' : meta.cached ? '· Kaydedilmiş yanıt' : meta.profile === 'compact' ? '· Kısa yanıt' : '';
   const footer = article.querySelector('.response-footer'); footer.hidden = false; footer.replaceChildren();
+  const notes = document.createElement('details'); notes.className='response-notes'; const summary = document.createElement('summary'); summary.textContent='Kaynaklar ve yanıt notları'; notes.append(summary); footer.append(notes);
   if (Array.isArray(meta.sources) && meta.sources.length) {
-    const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Taslağın başvuru kaynakları · uygulamadan önce incele' : 'Yanıta eşlik eden başvuru notları · canlı arama yapılmadı'; footer.append(label);
+    const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Taslağın başvuru kaynakları · uygulamadan önce incele' : 'Yanıta eşlik eden başvuru notları · canlı arama yapılmadı'; notes.append(label);
     const links = document.createElement('div'); links.className = 'response-sources';
     for (const ref of meta.sources) {
       const source = REFERENCE_LIBRARY.find(source => source.id === ref.id); if (!source) continue;
       const link = document.createElement('a'); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${source.kind === 'guide' ? 'Kılavuz' : 'Başvuru'} · ${source.publisher} · ${source.title}`; links.append(link);
     }
-    footer.append(links);
-  } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; footer.append(label); }
-  const note = document.createElement('div'); note.textContent = DISCLAIMER; footer.append(note);
-  if (meta.provenance) { const provenance = document.createElement('div'); provenance.textContent = meta.provenance; footer.append(provenance); }
-  if (meta.excluded?.length) { const constraints = document.createElement('div'); constraints.textContent = `Korunan isteklerin: ${meta.excluded.join(', ')} önerilmesin.`; footer.append(constraints); }
-  if (meta.checked) { const check = document.createElement('div'); check.textContent = 'Biçim, tanımlı dışlamalar ve bazı riskli tarifler kontrol edildi; bilimsel doğruluk onayı değildir.'; footer.append(check); }
-  if (meta.usage) { const usage = document.createElement('div'); usage.textContent = `Bu yanıt: ${meta.usage.charged} token · önbellekten ${meta.usage.cached} token`; footer.append(usage); }
-  if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? meta.novel ? 'Önceki öneriler tekrar edilmemesi için kısa alıntılarla taşındı.' : 'Sohbet bağı korunarak önceki metinden kısa bölümler kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); footer.append(limits); }
+    notes.append(links);
+  } else { const label = document.createElement('div'); label.textContent = meta.profile === 'template' ? 'Gönüllüler için başlangıç taslağı · yaşa ve koşullara göre uyarlanmalı.' : 'Bu soru için özel bir başvuru notu yok; iddiaları ayrıca kontrol et.'; notes.append(label); }
+  const note = document.createElement('div'); note.textContent = DISCLAIMER; notes.append(note);
+  if (meta.provenance) { const provenance = document.createElement('div'); provenance.textContent = meta.provenance; notes.append(provenance); }
+  if (meta.excluded?.length) { const constraints = document.createElement('div'); constraints.textContent = `Korunan isteklerin: ${meta.excluded.join(', ')} önerilmesin.`; notes.append(constraints); }
+  if (meta.checked) { const check = document.createElement('div'); check.textContent = 'Biçim, tanımlı dışlamalar ve bazı riskli tarifler kontrol edildi; bilimsel doğruluk onayı değildir.'; notes.append(check); }
+  if (meta.usage) { const usage = document.createElement('div'); usage.textContent = `Bu yanıt: ${meta.usage.charged} token · önbellekten ${meta.usage.cached} token`; notes.append(usage); }
+  if (meta.trimmed || meta.partialFiles) { const limits = document.createElement('div'); limits.textContent = [meta.trimmed ? meta.novel ? 'Önceki öneriler tekrar edilmemesi için kısa alıntılarla taşındı.' : 'Sohbet bağı korunarak önceki metinden kısa bölümler kullanıldı.' : '', meta.partialFiles ? 'Dosyaların yalnızca seçili metin bölümleri değerlendirildi.' : ''].filter(Boolean).join(' '); notes.append(limits); }
 }
 function responseControls(article, message) {
   const controls = article.querySelector('.response-controls'); controls.replaceChildren();
@@ -194,7 +195,7 @@ function render() {
   document.body.classList.toggle('is-conversing', Boolean(chat?.messages.length));
   $('#work-title').textContent = chat?.title || 'Yeni çalışma';
   if (chat?.messages.length) chat.messages.forEach(message => { const article = addMessage(message); article.classList.add('restored'); }); else welcome();
-  following = true; requestAnimationFrame(() => bottom()); renderFiles(); grow();
+  following = Boolean(chat?.messages.length); requestAnimationFrame(() => { if (following) bottom(); else { e.scroll.scrollTop = 0; $('#jump').hidden = true; } }); renderFiles(); grow();
 }
 function nearBottom() { return e.scroll.scrollHeight - e.scroll.scrollTop - e.scroll.clientHeight < 90; }
 function bottom() { e.scroll.scrollTop = e.scroll.scrollHeight; $('#jump').hidden = true; }
@@ -381,12 +382,14 @@ $('#theme').onclick = () => {
 let drawerReturnFocus;
 function closeDrawers() {
   e.sidebar.classList.remove('drawer-open'); $('#context-panel').classList.remove('drawer-open'); $('#scrim').hidden = true;
+  $('.chat-panel').inert = false; $('.topbar').inert = false;
   e.sidebar.inert = matchMedia('(max-width:720px)').matches; $('#context-panel').inert = true;
   $('#menu').setAttribute('aria-expanded', 'false'); $('#context-toggle').setAttribute('aria-expanded', 'false');
   if (drawerReturnFocus) { drawerReturnFocus.focus(); drawerReturnFocus = null; }
 }
 function openDrawer(target, trigger) {
   closeDrawers(); const node = $(target); node.inert = false; node.classList.add('drawer-open'); $('#scrim').hidden = false;
+  $('.chat-panel').inert = true; $('.topbar').inert = true; if (target === '#context-panel') e.sidebar.inert = true;
   drawerReturnFocus = trigger; trigger.setAttribute('aria-expanded', 'true'); node.querySelector('button,select,input').focus();
 }
 $('#menu').onclick = () => openDrawer('#sidebar', $('#menu'));
@@ -396,7 +399,7 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeDrawers();
   if (event.key !== 'Tab' || $('#scrim').hidden) return;
   const drawer = document.querySelector('.drawer-open'); if (!drawer) return;
-  const nodes = [...drawer.querySelectorAll('button,input,select,textarea,a')].filter(node => !node.disabled && node.getClientRects().length);
+  const nodes = [...drawer.querySelectorAll('button,input,select,textarea,a,summary,[tabindex]')].filter(node => !node.disabled && node.getClientRects().length);
   const first = nodes[0], last = nodes.at(-1);
   if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
   else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }

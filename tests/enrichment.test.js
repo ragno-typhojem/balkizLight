@@ -19,6 +19,7 @@ test('new research proposals have actionable controls, measurement and timing wi
     assert.ok(card.steps.length>=3,card.id);
     assert.ok(card.materials.every(id=>MATERIALS.some(m=>m.id===id)),card.id);
     assert.ok(SOURCES.some(s=>s.id===card.sourceId),card.id);
+    const source=SOURCES.find(s=>s.id===card.sourceId); if(new URL(source.url).hostname==='www.acs.org') assert.match(source.publisher,/American Chemical Society/);
   }
 });
 test('read-manual notes refer to real catalog IDs and do not redistribute contacts',()=>{
