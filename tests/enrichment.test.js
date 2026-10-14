@@ -73,3 +73,9 @@ test('without clauses exclude both named activities rather than retrieving forbi
   const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'Kimya için asit baz ve gıda boyası olmadan iki fikir öner.'}],settings:{domain:'chemistry'}}));
   assert.ok(!prepared.sources.some(source=>/asit|indikatör/i.test(source.title)));
 });
+
+test('generic chemistry wording cannot attach a writing workshop or astronomy facts',()=>{
+  const note=retrieveKnowledge('Kimya için tedarik edilebilir eğitim reaktifleri ve ölçüm araçlarıyla iki farklı araştırma fikri öner. Yalnız soru ve mekanizma yaz.','chemistry',true,{budget:1600});
+  assert.ok(note.sources.every(source=>['chemistry','science'].includes(source.domain)));
+  assert.ok(!note.sources.some(source=>source.id==='nasa-seasons'||source.id==='guide-1go6WPc_FB8awwQR4l6vgLsFuowBDwqG6'));
+});
