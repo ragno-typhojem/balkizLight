@@ -1,4 +1,4 @@
-# BALKIZ Light 2.9.10 · Atölye
+# BALKIZ Light 2.9.11 · Atölye
 
 Sade ana ekran: üç başlangıç, dosya ve mesaj. Yaş, süre/katılımcı ve malzeme drawer içinde; diğer tercihler ayrıca açılır. Kalıcı BALKIZ ve İLKYAR işaretleri korunur. Açık tema sıcak kâğıt/yeşil, koyu tema koyu botanik renkleri kullanır. Cihazda Comic Sans MS varsa kullanılır; yoksa birlikte dağıtılan OFL lisanslı Comic Neue kullanılır. Yazıtipi için üçüncü tarafa istek yapılmaz.
 
@@ -31,3 +31,11 @@ Kısa araştırma fikri, yöntem kartı ve kılavuz ayrı çıktılardır. Bir a
 Cloudflare için hızlı Llama 3.3 70B seçeneği JSON moduyla kullanılır. Sağlayıcıya tek bir birleştirilmiş sistem iletisi gider; politika ve kaynak notları ayrılıp kaybolmaz. Groq yedek olarak kalır. Model çıktısı genel bilimsel doğruluk garantisi vermez; bilinen kritik kimya/uygulama hataları ayrıca denetlenir.
 
 Seçilen ikinci/üçüncü fikir, geçmiş kısaltılırken birinci seçeneğe dönüşmez: ilgili seçenek gövdesi alıntı olarak taşınır. Asit–baz indikatörü ile C vitamini redoks indikatörü ayrılır; açık “kullanılmayacak” ifadeleri yanlışlıkla malzeme kullanımı sayılmaz.
+
+## 2.9.11 son kontroller
+
+Cloudflare Llama 3.3 70B için JSON şeması sunucuya doğrudan gönderilir; fikir sayısı da şemada sınırlandırılır. Bilimsel yenilik örnekleme sıcaklığını artırmak yerine kaynak/mekanizma çeşitliliğiyle sağlanır. Şema veya çalışma kaydını yanıt diye kopyalayan çıktı ve yakalanan uydurma ölçüm sinyalleri gösterilmez.
+
+Kaynak notunda bulunmayan kimyasal miktar kontrolü kısa fikirlere de uygulanır. Model fikri bu kontrollerden geçmezse uygun yaşta ve istenen sayıda kaynaklı başlangıç varsa açık bir açıklamayla sunulur; ikinci model çağrısı yapılmaz ve ilk çağrının gerçek kullanımı korunur. Bu yol serbest sohbetin veya kılavuzun yerini almaz.
+
+86 otomatik kontrol geçti; altı ekran boyutunda yatay taşma/mesaj alanı sınandı. Canlı üç turlu kimya sohbeti 9,4 / 2,3 / 4,9 saniyede, Cloudflare üzerinde Groq yedeğine geçmeden tamamlandı. Fizik kılavuzunda 13 İLKYAR başlığı ve boş veri tablosu gözlendi. Bu doğrulama biçim ve sohbet akışına aittir; bilimsel her cümlenin doğrulanması veya fiziksel uygulama değildir. Son fizik başvuru notunda polarizasyon tanımı, açı ve nicel/nitel ölçüm ayrımı ayrıca netleştirildi.
