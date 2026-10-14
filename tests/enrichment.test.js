@@ -47,8 +47,8 @@ test('bounded retrieval carries a read manual as planning evidence rather than s
 });
 test('AI idea seeds diversify and preserve user exclusions without becoming catalogue-only responses',()=>{
   const constraints=conversationConstraints([{role:'user',content:'Kimya olsun, asit baz ve gıda boyası kullanma.'}]);
-  const first=proposalContext('Başka deney bul','chemistry','',constraints,1000);
-  const seed=JSON.parse(first);const second=proposalContext('Başka deney bul','chemistry',`## ${seed.title}`,constraints,1000);
+  const first=proposalContext('Başka deney bul','chemistry','',constraints,1800);
+  const seed=JSON.parse(first);const second=proposalContext('Başka deney bul','chemistry',`## ${seed.title}`,constraints,1800);
   assert.notEqual(JSON.parse(second).title,seed.title);
   const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'Kimya için farklı bir deney bul'}],settings:{engine:'auto'}}));
   assert.match(prepared.payload.messages.map(m=>m.content).join('\n'),/proposal-seed-not-proof/);
@@ -116,4 +116,13 @@ test('constraint checks distinguish redox indicators and explicit non-use from f
   assert.equal(violatesExclusions('pH indikatörü ile asit–baz titrasyonu.',c),true);
   assert.equal(violatesExclusions('Gıda boyası ekle.',c),true);
   const all=conversationConstraints([{role:'user',content:'İndikatör kullanma.'}]);assert.equal(violatesExclusions('Redoks indikatörü.',all),true);
+});
+
+test('generic research suggestions use controlled measurable studies; unknown named topics get no unrelated seed',()=>{
+  const p=JSON.parse(proposalContext('Başka kimya araştırması öner','chemistry','',{excluded:[]},1800,'intermediate'));
+  assert.ok(p.controls&&p.measurement); assert.ok(p.source.facts);
+  const c=conversationConstraints([{role:'user',content:'Asit baz ve gıda boyası olmadan'}]);
+  const realistic=JSON.parse(proposalContext('Kimya için asit baz ve gıda boyası olmadan iki farklı araştırma fikri öner. Sadece soru, mekanizma ve ölçümü kısaca yaz.','chemistry','',c,1800));
+  assert.ok(realistic.controls&&realistic.measurement);
+  assert.equal(proposalContext('Kuantum dolanıklık ölçümü','physics','',{excluded:[]},1800),'');
 });
