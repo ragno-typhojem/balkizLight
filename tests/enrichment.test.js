@@ -157,3 +157,11 @@ test('explicit hazard prohibitions do not turn a safe research idea into a rejec
  assert.doesNotThrow(()=>validateAndRender(JSON.stringify({ideas:[{title:'Işık ömrü',question:'Sıcaklık etkili mi?',mechanism:'Kapalı ışıldayan çubukları karşılaştır.',measurement:'Zaman dakika ve sıcaklık °C.',safety:'Kuru buz kullanmayın; çubukları açmayın.'}]}),p));
  assert.throws(()=>validateAndRender(JSON.stringify({ideas:[{title:'Soğutma',question:'Sıcaklık etkili mi?',mechanism:'Kuru buz kullanın.',measurement:'Sıcaklık °C.',safety:'Gözlük takın.'}]}),p));
 });
+
+test('guide generation retains blank data and rejects invented measured signals',async()=>{
+ const {validateAndRender}=await import('../lib/output.js');
+ const p=prepareRequest(validateInput({messages:[{role:'user',content:'Polarizasyon kılavuzu yaz'}],settings:{domain:'physics'}}));
+ assert.match(p.payload.messages.at(-1).content,/Ölçüm hücreleri boş/);
+ assert.throws(()=>validateAndRender(JSON.stringify({reply:'Ölçümde I₁≈ 120 lux, 30°→95 lux.'}),p));
+ assert.doesNotThrow(()=>validateAndRender(JSON.stringify({reply:'Açı 30°; okunan ışık düzeyi: ___ lx. Verileri siz kaydedin.'}),p));
+});
