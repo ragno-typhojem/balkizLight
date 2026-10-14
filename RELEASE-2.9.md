@@ -1,4 +1,4 @@
-# BALKIZ Light 2.9.8 · Atölye
+# BALKIZ Light 2.9.9 · Atölye
 
 Sade ana ekran: üç başlangıç, dosya ve mesaj. Yaş, süre/katılımcı ve malzeme drawer içinde; diğer tercihler ayrıca açılır. Kalıcı BALKIZ ve İLKYAR işaretleri korunur. Açık tema sıcak kâğıt/yeşil, koyu tema koyu botanik renkleri kullanır. Cihazda Comic Sans MS varsa kullanılır; yoksa birlikte dağıtılan OFL lisanslı Comic Neue kullanılır. Yazıtipi için üçüncü tarafa istek yapılmaz.
 
@@ -29,3 +29,5 @@ Canlı kimya akışında Türkçe sayı sözcükleri ve “kılavuz yazma” ist
 Kısa araştırma fikri, yöntem kartı ve kılavuz ayrı çıktılardır. Bir araştırma fikri istendiğinde adım/miktar eklenmez; tam deney yöntemi açıkça istendiğinde açılır. Ana kütüphane 99 fikirle açılır; 31 kılavuz taslağı ikinci düzeydedir.
 
 Cloudflare için hızlı Llama 3.3 70B seçeneği JSON moduyla kullanılır. Sağlayıcıya tek bir birleştirilmiş sistem iletisi gider; politika ve kaynak notları ayrılıp kaybolmaz. Groq yedek olarak kalır. Model çıktısı genel bilimsel doğruluk garantisi vermez; bilinen kritik kimya/uygulama hataları ayrıca denetlenir.
+
+Seçilen ikinci/üçüncü fikir, geçmiş kısaltılırken birinci seçeneğe dönüşmez: ilgili seçenek gövdesi alıntı olarak taşınır. Asit–baz indikatörü ile C vitamini redoks indikatörü ayrılır; açık “kullanılmayacak” ifadeleri yanlışlıkla malzeme kullanımı sayılmaz.

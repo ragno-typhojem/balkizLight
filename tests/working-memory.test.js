@@ -26,3 +26,9 @@ test('multiple ideas use numbered text rather than forcing a single experiment c
   const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'3 farklı kimya deneyi öner'}]}));
   assert.equal(prepared.experimentCard,false); assert.match(prepared.payload.messages[1].content,/numaralandır/);
 });
+
+test('choosing the second idea carries that option in compressed assistant history',()=>{
+  const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'Üç farklı bilim fikri öner'},{role:'assistant',content:options+'\n'+'Ek açıklama. '.repeat(80)},{role:'user',content:'İkinci fikri geliştir; yalnız kontrol değişkenini yaz.'}],settings:{domain:'chemistry',detail:'short'}}),true);
+  const history=prepared.payload.messages.filter(m=>m.role==='assistant').map(m=>m.content).join('\n');
+  assert.match(history,/2\. İletkenlik/); assert.ok(!history.includes('### 1. Aljinat'));
+});

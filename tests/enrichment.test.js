@@ -107,3 +107,13 @@ test('another research idea stays brief without forcing a full preparation recip
   const p=prepareRequest(validateInput({messages:[{role:'user',content:'Başka kimya araştırması öner'}],settings:{domain:'chemistry'}}));
   assert.equal(p.novel,true); assert.equal(p.experimentCard,false); assert.equal(p.ideaOutput,true); assert.equal(p.ideaCount,1);
 });
+
+test('constraint checks distinguish redox indicators and explicit non-use from forbidden experiments',async()=>{
+  const {violatesExclusions}=await import('../lib/constraints.js');
+  const c=conversationConstraints([{role:'user',content:'Asit baz ve gıda boyası istemiyorum.'}]);
+  assert.equal(violatesExclusions('C vitamini redoks deneyinde DCPIP indikatörü kullanılır.',c),false);
+  assert.equal(violatesExclusions('Gıda boyası kullanılmaz; etiketli aljinat jeli incelenir.',c),false);
+  assert.equal(violatesExclusions('pH indikatörü ile asit–baz titrasyonu.',c),true);
+  assert.equal(violatesExclusions('Gıda boyası ekle.',c),true);
+  const all=conversationConstraints([{role:'user',content:'İndikatör kullanma.'}]);assert.equal(violatesExclusions('Redoks indikatörü.',all),true);
+});
