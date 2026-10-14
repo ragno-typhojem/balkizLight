@@ -1,4 +1,4 @@
-# BALKIZ Light 2.6 · Etkinlik atölyesi
+# BALKIZ Light 2.7 · Etkinlik atölyesi
 
 İLKYAR projelerinde etkinlik hazırlayan gönüllüler için hafif, Türkçe bir çalışma alanı. Mevcut BALKIZ Light reposunun güncellenmiş sürümüdür. Sabit BALKIZ logosu ve sağ üstte resmi İLKYAR logosu kullanılır.
 
@@ -23,7 +23,7 @@ Diğer ayarlar `.env.example` içinde. `.env.local` veya gerçek anahtarları re
 
 ## Ücretsiz kapasite nasıl korunur?
 
-- Normal bilimsel açıklama ve basit genel işlerde `openai/gpt-oss-20b`; kimya/güvenlik, belge inceleme ve ileri araştırmada `openai/gpt-oss-120b` kullanılır. Göreve göre seçim aşağıdaki 2.6.0 notlarında açıklanır.
+- Basit genel açıklamalarda `openai/gpt-oss-20b`; yeni bilimsel deney, kılavuz, kimya/güvenlik, belge inceleme ve ileri araştırmada `openai/gpt-oss-120b` kullanılır. Güncel sohbet ve sağlayıcı seçimi aşağıdaki 2.7.0 notlarında açıklanır.
 - Yoğunlukta bilim modeli korunur; yanıt üst sınırı ve taşınan geçmiş azalır. Güncel kullanıcı mesajı kesilmez. Bütçeye sığmayan istek için açık hata verilir.
 - Son ilgili mesajlar, son yanıt ve uzun sohbette başlangıç kısıtları kısa alıntılarla korunur; hazır taslak ve kısmi yanıt bağlamı da taşınır. Sıkıştırma için ek model çağrısı yapılmaz; bütün geçmiş her seferinde gönderilmez. Dosyaların soruyla ilgili küçük metin bölümleri seçilir.
 - Token tahmini Türkçe için ihtiyatlı UTF-8 tahminidir; gerçek model tokenizer’ı değildir. Sağlayıcı 429 ve reset başlıkları esas alınır.
@@ -32,7 +32,7 @@ Diğer ayarlar `.env.example` içinde. `.env.local` veya gerçek anahtarları re
 - Durdurma ve bağlantı kesilmesi upstream isteğini iptal eder. Yarım yanıtlar ve uzunluk sınırına ulaşan yanıtlar tamamlanmış diye önbelleğe alınmaz.
 - Kuyruk dolunca kaynak tüketen sınırsız bekleme veya otomatik tekrar döngüsü yerine yeniden deneme süresi gösterilir.
 - Varsayılan dört eşzamanlı çağrı ve IP başına dakikada altı istek vardır. Okulun ortak internet bağlantısında aynı IP paylaşılabileceğinden `USER_RPM` ayarı ihtiyaca göre düzenlenebilir.
-- Yerel ve paylaşımlı modda doğrulanan gerçek kullanımla rezervasyon uzlaştırılır. Redis pencere kimlikleri eski yanıtın yeni dakika/gün sayacını azaltmasını önler. Kullanımı bilinmeyen iptal/kopmada rezervasyon korunur; sağlayıcı HTTP hata yanıtında token rezervasyonu bırakılır. Sağlayıcının doğruladığı önbellek tokenları kullanım hesabından düşülür.
+- Yerel ve paylaşımlı modda doğrulanan gerçek kullanımla rezervasyon uzlaştırılır. Redis pencere kimlikleri eski yanıtın yeni dakika/gün sayacını azaltmasını önler. Kullanımı bilinmeyen iptal/kopmada rezervasyon korunur; sağlayıcı HTTP hata yanıtında token rezervasyonu bırakılır. Groq'un doğruladığı önbellek tokenları kullanım hesabından düşülür; NVIDIA'da raporlanan toplam kullanım ihtiyatlı olarak sayılır.
 
 Groq limitleri model ve kuruluş bazındadır. 12 Ekim 2026’da [Groq resmi limit tablosunda](https://console.groq.com/docs/rate-limits) GPT-OSS 20B ve 120B için ücretsiz limitler model başına 30 RPM, 1.000 RPD, 8.000 TPM ve 200.000 TPD olarak listelenmiştir. Hesabının kesin sınırları değişebilir. [Groq limitleri](https://console.groq.com/docs/rate-limits) ve [hesap limitleri](https://console.groq.com/settings/limits) üzerinden kontrol et.
 
@@ -70,7 +70,7 @@ Dosyanın kendisi ve çıkarılan tam metin cihaz belleğinde kalır; sohbet kay
 
 ## Bilimsel doğruluk ve güvenlik
 
-Yanıtların tamamının doğru olduğu garanti edilmez. 116 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 kaynağın tarihi 10 Ekim, 20 yeni araştırma kaynağının tarihi 12 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
+Yanıtların tamamının doğru olduğu garanti edilmez. 122 başvuru kaynağı; NASA, NIST, IUPAC, ACS, RSC, WHO, CDC, FDA, OpenStax/Rice University, üniversite fizik kaynakları, Nikon, Google Developers ve PhET gibi kaynaklardan kısa notlar içerir. Bilimsel dayanaklar, simülasyonlar ve etkinlik kılavuzları ayrı türlerdir. 12 önceki kaynağın not tarihi 5 Ekim; 68 kaynağın tarihi 10 Ekim, 20 yeni araştırma kaynağının tarihi 12 Ekim 2026’dır. Bu tarih tüm gelecekteki yanıtların doğrulandığı anlamına gelmez.
 
 İndeks bir kez hazırlanır; sözcük eşleşmesi ve konu ağırlıklarıyla ilgili notlar seçilir. Yeni tam planlarda en fazla 3 bilimsel not (1600 karakter) ve 1 kısa kılavuz bağlamı (1100 karakter) aktarılır. Kısa takip sohbetinde en fazla 2 bilimsel not (950 karakter) seçilir; kılavuz bağlamı yeniden eklenmez. Bağlam için ayrı embedding, arama API’si veya yapay zekâ isteği yapılmaz. Metin bulunduğunda bilimsel iddianın dayanağı ilgili referanstır; kılavuz bir uygulama onayı değildir. Uygulama çalışma sırasında internette canlı araştırma yapmaz. Kaynak bulunamıyorsa ayrı kontrol gerektiği gösterilir.
 
@@ -96,7 +96,7 @@ PDF.js ve fflate bu pakette lisanslarıyla hazırdır. Güncellemeleri yeniden k
 
 ## Bu sürümün teslim sınırı
 
-2.6.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
+2.7.0 için JavaScript/JSON sözdizimi kontrolü ve build tamamlandı. Regresyon testleri güncellendi ancak önceki kullanıcı tercihi doğrultusunda otomatik test, tarayıcı/cihaz testi ve canlı Vercel/Groq denemesi çalıştırılmadı; kullanıcıya bırakıldı. Build yalnızca dağıtım dosyalarını hazırlar. Bu sürüm GitHub main dalına gönderilmek üzere hazırlanmıştır; canlı Vercel dağıtımı doğrulanmamıştır.
 
 ## 2.3.0: birlikte geliştirme
 
@@ -157,3 +157,19 @@ Ekonomik kısa AI işlerinde bağlam/çıktı bütçesi küçültülür; geçerl
 Kullanıcı tercihiyle Gemini/Mistral eklenmedi. Monica Open API ücretlidir ve ücretsiz kişisel sohbet hakkıyla ayrı sistemdir. İncelenen alternatiflerin kalıcı ücretsiz/deneme/ücretli ayrımı [API-SECENEKLERI.md](API-SECENEKLERI.md) içindedir. Bu sürüm alternatif sağlayıcıya geçirilmiş değildir; kullanıcı BALKIZ arayüzünü kullanmaya devam eder, mevcut API anahtarı yalnız sunucudadır.
 
 Teslim kontrolü yalnız JavaScript/JSON sözdizimi, dağıtım dosyalarının hazırlanması ve paket içeriğidir. Otomatik testler, tarayıcı/cihaz ve canlı Groq/Vercel çalıştırılmadı; kullanıcıya bırakıldı.
+
+## 2.7.0 · Araştırma sohbeti, tedarik varsayımı ve NVIDIA seçeneği
+
+Otomatik mod artık serbest etkinlik sohbetini statik kartlarla karşılamaz. “Bunu değiştir”, “başka malzemeyle aynı deney” ve “başka deney” ayrıldı. Yerel kart yalnız havuzdan açık seçimle veya “Yalnız hazır havuz” modunda açılır; kart açılması sonraki sohbeti zorla yerel moda kilitlemez. Mağaza araştırması için açık istekler yerel kalabilir. Bu tercih, anlamlı takip sohbetlerinin model kotası kullanacağı anlamına gelir; eski “her desteklenen fikir otomatik 0 token” davranışı serbest sohbet için kaldırıldı. Açılan hazır içerik yine 0 model tokenıdır.
+
+Son çalışma sorusu, malzemeleri, yöntemin kısa özeti, son değişiklik ve dışlamalar extractive çalışma kaydıyla taşınır; ayrı özetleme/embedding model çağrısı yoktur. Numara/“ikincisi” ile seçilen alternatifin bölümü kısa bağlamda korunur. Son kullanıcı isteği ve son yanıt için ayrı geçmiş payı ayrılır. “Başka deneyin kılavuzu” artık tek kısa kart şemasına zorlanmaz; birden çok fikir isteği numaralı metin olabilir. Bu kurallar bütün Türkçe ifadeleri kusursuz anlamaz; gerçek konuşma kalitesi kullanıcı testine bırakıldı.
+
+Gönüllüye verilen bilimsel plan ile çocuklara yapılacak anlatım ayrıldı. Yeni çalışma bilimsel derinliği araştırma düzeyindedir. “Uygun ürün ve kimyasalları tedarik edebiliriz” varsayılanı; eğitim reaktifi, ölçüm cihazı, optik filtre ve başka araçları düşünmeye izin verir. “Yalnız elimizdeki” seçeneği ve açık kullanıcı dışlamaları korunur. Stok/fiyat/SDS/ürün uygunluğu veya yapılmış tedarik garantisi değildir. Uygulama miktarı ve derişim doğrulanmadığında uydurulmaz; yine araştırma sorusu ve yöntem geliştirilebilir. Kullanıcı “tedarik edebiliriz/daha zor” derse ilgili seçenekler sonraki tur için güncellenir.
+
+Yeni 10 ileri araştırma başlangıcıyla yerel havuz 70; 14 ek malzemeyle katalog 60; 6 yeni bilimsel başvuruyla kaynak sayısı 122 oldu. EC–derişim, C vitamini kalibrasyonu, kapalı sodyum asetat paketinde sıcaklık eğrisi, aljinat mekanik cevabı, biyopolimer akış modeli, Malus/ofset, LED kırınım geometrisi, hava sütunu modları, örnekleme/model uyumu ve sınıflandırma ablasyonu eklendi. Bunlar uygulanmış deney sonucu değildir; araç kalibrasyonu, öğretmen hazırlığı ve model sınırları açık yazılır. Önceki 31 taslak ve 131 kılavuz/ek korunur. Serbest AI'ın seçenekleri bu 70 başlangıçla sınırlı değildir.
+
+Basit açıklamalarda ekonomik model korunur; yeni bilimsel araştırma, kılavuz, kimya/güvenlik ve ileri çalışma araştırma modeline yönlenir. Prompt/şema/cevap rezervasyonunda gerçek tokenizasyon yerine ihtiyatlı tahmin kullanılır. Daha iyi açıklama için cevap payı artırıldı; gerçek maliyet/kalite ve kota altında sohbet sayısı ölçülmedi. Kota dolduktan sonra farklı model/hesapla otomatik tekrar yapılmaz.
+
+[API-SECENEKLERI.md](API-SECENEKLERI.md) güncel üçlü karşılaştırmayı ve NVIDIA kurulumunu içerir. GitHub Models kapanmış; HF ücretsiz hesapta dahil kredi sunmuyor. NVIDIA model denemesi için seçildi ve API adapter'ı eklendi. Free NVIDIA erişimi production hakkı olmadığı için mevcut yayın varsayılan Groq'tur. Aktivasyon sunucuda anahtar/erişim ayarlarını gerektirir; bu sürüm Vercel ortam değişkenlerini değiştirmedi. Kullanıcı BALKIZ arayüzünde kalır.
+
+Bu sürümde yalnız sözdizimi/JSON, server import ve dağıtım dosyası kontrolleri ile build yapılır. Kullanıcının talimatıyla otomatik test, tarayıcı/cihaz ve canlı Groq/NVIDIA/Vercel testleri çalıştırılmadı. Regresyon senaryoları repoda hazırdır. Build ve Git push, konuşmanın canlı modelde doğru işlediğini kanıtlamaz.

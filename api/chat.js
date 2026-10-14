@@ -5,9 +5,9 @@ import { validateInput, prepareRequest, InputError } from '../lib/policy.js';
 import { Governor, BusyError, quotaReset } from '../lib/governor.js';
 import { readSSE, encodeEvent } from '../lib/sse.js';
 import { DISCLAIMER, publicSource } from '../lib/knowledge.js';
+import { providerSettings, providerPayload, providerQuotaHeaders } from '../lib/providers.js';
 
 export const config = { runtime: 'edge' };
-const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const RESPONSE_HEADERS = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 
 function json(body, status = 200, extra = {}) {
@@ -39,7 +39,8 @@ async function readBody(request) {
 }
 
 export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.now() } = {}) {
-  const governor = new Governor({ env, fetchImpl, now });
+  const provider = providerSettings(env);
+  const governor = new Governor({ env:provider.quotaEnv, fetchImpl, now });
   const cache = new Map(), inFlight = new Set();
   const cleanCache = () => {
     for (const [key, entry] of cache) if (entry.expires <= now()) cache.delete(key);
@@ -68,7 +69,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
         } });
         return new Response(stream, { headers: { ...RESPONSE_HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8' } });
       }
-      if (!env.GROQ_API_KEY) return json({ error: 'Yapay zekâ henüz yapılandırılmamış. Sunucuda GROQ_API_KEY tanımlanmalı.' }, 503);
+      if (provider.error || !provider.key) return json({ error: provider.error || 'Yapay zekâ henüz yapılandırılmamış. Sunucudaki API anahtarı ayarlanmalı.' }, 503);
       const client = await digest(request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown');
       cleanCache();
       cacheKey = input.sessionId ? await digest(`${client}:${JSON.stringify(input)}`) : '';
@@ -80,21 +81,21 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       if (cacheKey && inFlight.has(cacheKey)) throw new BusyError('Bu yanıt zaten hazırlanıyor. Birkaç saniye sonra tekrar deneyebilirsin.', 2, 409);
       if (request.signal.aborted) throw new BusyError('İstek iptal edildi.', 0, 499);
       if (cacheKey) { inFlight.add(cacheKey); lockHeld = true; }
-      let prepared = prepareRequest(input, false, env);
-      if (governor.pressure(prepared.model) || prepared.estimated > governor.limits.tpm) prepared = prepareRequest(input, true, env);
+      let prepared = prepareRequest(input, false, provider.quotaEnv);
+      if (governor.pressure(prepared.model) || prepared.estimated > governor.limits.tpm) prepared = prepareRequest(input, true, provider.quotaEnv);
       const available = governor.availableTokens(prepared.model);
       if (available >= 1000 && available < prepared.estimated) {
-        try { prepared = prepareRequest(input, true, env, available); } catch (error) { if (!(error instanceof InputError)) throw error; }
+        try { prepared = prepareRequest(input, true, provider.quotaEnv, available); } catch (error) { if (!(error instanceof InputError)) throw error; }
       }
       try { lease = await governor.reserve(prepared.model, prepared.estimated, client); }
       catch (error) {
         if (error instanceof BusyError && error.status === 429 && (prepared.profile !== 'compact' || error.availableTokens >= 1000)) {
-          try { prepared = prepareRequest(input, true, env, error.availableTokens ?? governor.availableTokens(prepared.model)); } catch (packingError) { if (packingError instanceof InputError) throw error; throw packingError; }
+          try { prepared = prepareRequest(input, true, provider.quotaEnv, error.availableTokens ?? governor.availableTokens(prepared.model)); } catch (packingError) { if (packingError instanceof InputError) throw error; throw packingError; }
           lease = await governor.reserve(prepared.model, prepared.estimated, client);
         } else throw error;
       }
       // The shared reservation also sees simultaneous requests on other instances.
-      if (lease.pressure && prepared.profile !== 'compact') prepared = prepareRequest(input, true, env);
+      if (lease.pressure && prepared.profile !== 'compact') prepared = prepareRequest(input, true, provider.quotaEnv);
       controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 55000);
       const onAbort = () => controller.abort();
@@ -121,15 +122,15 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
             try {
               send({ meta }); // First bytes arrive before model generation; no partial recipe is exposed.
               upstreamStarted = true;
-              const response = await fetchImpl(ENDPOINT, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-                body: JSON.stringify(prepared.payload), signal: controller.signal,
+              const response = await fetchImpl(provider.endpoint, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
+                body: JSON.stringify(providerPayload(prepared,provider)), signal: controller.signal,
               });
-              governor.observe(prepared.model, response.headers, response.status, prepared.estimated);
+              governor.observe(prepared.model, providerQuotaHeaders(response.headers,provider), response.status, prepared.estimated);
               if (!response.ok) {
                 await response.body?.cancel(); charged = 0;
                 if (response.status === 429) {
-                  const wait = Math.max(1, Math.ceil(quotaReset(response.headers, prepared.estimated) / 1000));
+                  const wait = Math.max(1, Math.ceil(quotaReset(providerQuotaHeaders(response.headers,provider), prepared.estimated) / 1000));
                   send({ error: 'Ücretsiz yapay zekâ kotası dolu.', retryAfter: wait }); out.close(); return;
                 }
                 throw new OutputError(response.status === 401 || response.status === 403 ? 'Sunucunun model erişimi veya API anahtarı kontrol edilmeli.' : 'Yapay zekâ servisi yanıt biçimini kabul etmedi veya yanıt veremedi.');
@@ -137,7 +138,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
               const result = await response.json();
               const usage = result.usage || result.x_groq?.usage;
               const total = Number.isFinite(usage?.total_tokens) ? usage.total_tokens : undefined;
-              const cached = Number.isFinite(usage?.prompt_tokens_details?.cached_tokens) ? Math.min(total || 0, Math.max(0, usage.prompt_tokens_details.cached_tokens)) : 0;
+              const cached = provider.name === 'groq' && Number.isFinite(usage?.prompt_tokens_details?.cached_tokens) ? Math.min(total || 0, Math.max(0, usage.prompt_tokens_details.cached_tokens)) : 0;
               if (Number.isFinite(total)) charged = total - cached;
               const choice = result.choices?.[0];
               if (choice?.finish_reason === 'length') throw new OutputError('Yanıt uzunluk sınırında kesildi. Yarım deney adımları gösterilmedi; daha kısa bir fikir iste.');
@@ -160,18 +161,18 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
       let upstream;
       try {
         upstreamStarted = true;
-        upstream = await fetchImpl(ENDPOINT, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-          body: JSON.stringify(prepared.payload), signal: controller.signal,
+        upstream = await fetchImpl(provider.endpoint, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
+          body: JSON.stringify(providerPayload(prepared,provider)), signal: controller.signal,
         });
       } catch {
         controller.abort(); await finish();
         return json({ error: request.signal.aborted ? 'İstek iptal edildi.' : 'Yanıt süresi aşıldı veya servise ulaşılamadı. Tekrar deneyebilirsin.' }, request.signal.aborted ? 499 : 504);
       }
-      governor.observe(prepared.model, upstream.headers, upstream.status, prepared.estimated);
+      governor.observe(prepared.model, providerQuotaHeaders(upstream.headers,provider), upstream.status, prepared.estimated);
       if (!upstream.ok || !upstream.body) {
         await upstream.body?.cancel(); await finish(0);
-        const wait = Math.max(1, Math.ceil(quotaReset(upstream.headers, prepared.estimated) / 1000));
+        const wait = Math.max(1, Math.ceil(quotaReset(providerQuotaHeaders(upstream.headers,provider), prepared.estimated) / 1000));
         if (upstream.status === 429) return json({ error: 'Ücretsiz yapay zekâ kotası dolu. Bütçe yenilenince tekrar dene.', retryAfter: wait }, 429, { 'Retry-After': String(wait) });
         return json({ error: upstream.status === 401 || upstream.status === 403 ? 'Sunucunun yapay zekâ anahtarı veya model erişimi kontrol edilmeli.' : 'Yapay zekâ servisi yanıt veremedi. Tekrar deneyebilirsin.' }, 502);
       }
@@ -198,7 +199,7 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
               if (Number.isFinite(reported?.total_tokens)) {
                 usage = reported.total_tokens;
                 const cached = reported.prompt_tokens_details?.cached_tokens;
-                cachedTokens = Number.isFinite(cached) ? Math.min(usage, Math.max(0, cached)) : 0;
+                cachedTokens = provider.name === 'groq' && Number.isFinite(cached) ? Math.min(usage, Math.max(0, cached)) : 0;
               }
               if (text.length > 48000) throw new Error('Yanıt boyutu sınırı aşıldı.');
             }

@@ -47,7 +47,7 @@ test('unsafe chemistry and eye-closing advice cannot be exposed as a recipe', ()
   assert.throws(() => validateAndRender(JSON.stringify(eyes), clean), /riskli/);
 });
 test('unknown lab materials ask a relevant free clarification rather than inventing concentrations', () => {
-  const input = validateInput({ messages: messages.slice(0, 5) });
+  const input = validateInput({ messages: messages.slice(0, 5), settings: {procurement:'owned'} });
   assert.match(laboratoryClarification(input), /kimyasalların adları/);
 });
 test('a length-limited scientific answer exposes no partial recipe and triggers no auto retry', async () => {
@@ -73,7 +73,7 @@ test('scientific responses are validated before any delta reaches the client', a
 });
 test('the lab clarification does not require a key or spend provider quota', async () => {
   let calls = 0; const handler = createHandler({ fetchImpl: async () => { calls++; throw new Error('must not call'); } });
-  const response = await handler(new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: messages.slice(0, 5), settings: { engine: 'ai' } }) }));
+  const response = await handler(new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: messages.slice(0, 5), settings: { engine: 'ai', procurement:'owned' } }) }));
   const events = []; for await (const raw of readSSE(response.body)) events.push(JSON.parse(raw));
   assert.equal(calls, 0); assert.equal(events.at(-1).usage.charged, 0); assert.match(events.find(event => event.delta).delta, /etiketli derişimleri/);
 });

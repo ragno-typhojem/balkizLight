@@ -1,4 +1,32 @@
-# API seçenekleri · 13 Ekim 2026
+# API seçimi · 14 Ekim 2026
+
+Bu karşılaştırmada güncel doğrudan belgeler arama motorunun eski özetlerinden önceliklidir. BALKIZ'ın yayımlanan sürümü varsayılan olarak Groq kullanır. NVIDIA sunucu bağlantısı isteğe bağlıdır; hesap, API anahtarı veya üretim lisansı bu kod değişikliğiyle verilmez.
+
+| Seçenek | Güncel durum | Seçim |
+|---|---|---|
+| Hugging Face Serverless / Inference Providers | Doğrudan güncel fiyat sayfasında ücretsiz kullanıcıya dahil aylık kredi **yok**. Eski 0,10 USD bilgisi arama sonuçlarında kalabiliyor. Model/provider üzerinden kredi satın alarak kullanım var. | Kalıcı yüksek ücretsiz kota için seçilmedi. |
+| GitHub Models Marketplace | GitHub'a göre 30 Temmuz 2026'da tamamen emekliye ayrıldı; katalog, playground, inference API ve BYOK kapalı. Copilot ayrı bir üründür. | Yeni BALKIZ backend'i olarak kullanılamıyor. |
+| NVIDIA API Catalog / NIM | Developer Program ile model API'lerini denemek mümkün. Resmî FAQ ve API Trial Terms ücretsiz erişimi test/geliştirme/evaluation ile sınırlar; gerçek son kullanıcı hizmeti production sayılır ve ayrıca production yetkisi gerektirir. | Üçlü içinden **model denemesi için seçildi**; açık gönüllü yayını otomatik taşınmadı. |
+
+NVIDIA'da başlangıç modelleri, belgelenmiş hosted endpointleri bulunan `openai/gpt-oss-120b` ve `openai/gpt-oss-20b` olarak belirlendi. Bu, NVIDIA'nın ayrı bir GPT modeli ürettiği iddiası değildir; GPT-OSS modelleri NVIDIA altyapısında çağrılır. Nemotron-3-Super model kartının resmî desteklenen dil listesinde Türkçe olmadığı için Türkçe BALKIZ'ın varsayılanı yapılmadı. Bu tercih canlı karşılaştırmalı kalite testinin sonucu değildir.
+
+Hesabın kesin NVIDIA kota/credit değerleri görülmedi. İnternetteki 40 RPM veya eski 1.000 kredi sayıları bu hesap için garanti sayılmaz. Kodda NVIDIA için 10 RPM, 1.000 RPD, 20.000 TPM ve 200.000 TPD ihtiyatlı **uygulama sınırı** vardır; bunlar sağlayıcının sana tanıdığı ücretsiz limit değildir. Hesap paneline göre `NVIDIA_RPM/RPD/TPM/TPD` düzenlenir. Groq'un kendi gerçek sınırları veya NVIDIA erişim koşulları kaldırılmaz.
+
+## NVIDIA bağlantısını açmak
+
+- Yalnız geliştirme/test ortamında: sunucuda `AI_PROVIDER=nvidia`, `NVIDIA_API_KEY` ve `NVIDIA_ACCESS_MODE=evaluation`. Mevcut Groq anahtarını silebilmen gerekmez.
+- Gerçek production hakkı alındıktan sonra: `NVIDIA_ACCESS_MODE=production-authorized`. Bu değişken bir teknik beyan/kurulum ayarıdır; NVIDIA'dan hak veya lisans satın almaz/doğrulamaz. Vercel production ortamında evaluation ayarıyla NVIDIA çağrısı reddedilir.
+- Önceki yayına dönüş: `AI_PROVIDER=groq`. Otomatik provider/model atlama, ikinci generation veya ücretli fallback yoktur.
+
+Anahtarlar yalnız Edge fonksiyonundadır; statik `public/` klasörüne kopyalanmaz. Tarayıcı sadece aynı sitenin `/api/chat` uç noktasına gider. İstemciden provider/endpoint/API key seçilemez; izin verilen iki endpoint kodda sabittir. Kullanıcı BALKIZ arayüzünü görür. Harici AI servisine gönderilen sohbet/alinti için sıfır kayıt veya kusursuz doğruluk iddiası yoktur.
+
+NVIDIA adapter'ı hosted GPT-OSS belgelerindeki `max_tokens` ve `reasoning_effort` alanlarını kullanır. Hosted dokümanda doğrulanmayan Groq'a ait `max_completion_tokens/include_reasoning` alanları gönderilmez. Bilimsel JSON sözleşmesi promptta istenir ve tamamlanan cevap BALKIZ'ın biçim/risk kontrollerinden geçer; NVIDIA tarafında strict constrained decoding garantisi verilmez. Düşünme/özel metadata kullanıcıya aktarılmaz. Live API denemesi yapılmadı.
+
+Kaynaklar: [Hugging Face güncel fiyat sayfası](https://huggingface.co/docs/inference-providers/pricing), [GitHub Models kapanışı](https://docs.github.com/en/github-models), [NVIDIA resmî FAQ](https://docs.api.nvidia.com/nim/docs/product), [NVIDIA API Trial Terms](https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf), [NVIDIA GPT-OSS 120B API](https://docs.api.nvidia.com/nim/reference/openai-gpt-oss-120b-infer), [NVIDIA GPT-OSS 20B API](https://docs.api.nvidia.com/nim/reference/openai-gpt-oss-20b-infer), [Nemotron model kartı](https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-super-120b-a12b).
+
+---
+
+# Önceki araştırma · 13 Ekim 2026
 
 Kullanıcı Gemini'ı ve Mistral'ı istemediği için bu sürüme yeni sağlayıcı bağlanmadı. BALKIZ'ın mevcut Groq bağlantısı korundu. Sağlayıcı hesabı veya ödeme açılmadı; yeni ücretli çağrı eklenmedi. Kişisel sohbet siteleri sunucu API'si olarak otomatik kullanılmaz.
 

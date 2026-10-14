@@ -9,13 +9,17 @@ import { EXPERIMENT_BANK } from '../lib/experiment-bank.js';
 import { SOURCES } from '../lib/knowledge.js';
 import { GUIDE_FORMATS } from '../lib/guide-format.js';
 
-const input = (text, settings = {}, prior = []) => validateInput({ messages: [...prior, { role: 'user', content: text }], settings });
-test('automatic new experiment requests can produce a local proposal without a key or provider call', async () => {
+const input = (text, settings = {}, prior = []) => validateInput({ messages: [...prior, { role: 'user', content: text }], settings: {engine:'local',...settings} });
+test('explicit local requests can produce a proposal without a key or provider call', async () => {
   let calls = 0;
   const handler = createHandler({ fetchImpl: async () => { calls++; throw new Error('must not call'); } });
   const response = await handler(new Request('https://balkiz.test/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input('Yeni kimya deneyi bul')) }));
   const events = []; for await (const raw of readSSE(response.body)) events.push(JSON.parse(raw));
   assert.equal(calls, 0); assert.equal(events.at(-1).usage.charged, 0); assert.ok(events.some(event => event.delta));
+});
+test('automatic free-form conversation is not replaced by catalogue cards', () => {
+  assert.equal(buildLocalReply(input('Yeni kimya deneyi bul',{engine:'auto'})),null);
+  assert.equal(buildLocalReply(input('Bunu daha zorlaştır',{engine:'auto'})),null);
 });
 test('another local proposal avoids the previous base idea and preserves exclusions', () => {
   const first = buildLocalReply(input('Yeni kimya deneyi bul'));

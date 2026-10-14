@@ -8,9 +8,9 @@
   <title>BALKIZ Light · Etkinlik atölyesi</title>
   <link rel="icon" href="/assets/balkiz-mark.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/styles.css?v=2.6.0">
+  <link rel="stylesheet" href="/styles.css?v=2.7.0">
   <script src="/vendor/marked.umd.js" defer></script>
-  <script type="module" src="/app.js?v=2.6.0"></script>
+  <script type="module" src="/app.js?v=2.7.0"></script>
 </head>
 <body>
   <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -71,13 +71,14 @@
           <div class="context-header"><span class="eyebrow">BİRLİKTE PLANLAYALIM</span><button id="close-context" class="icon-button context-close" aria-label="Ayarları kapat"><svg><use href="#i-close"/></svg></button></div>
           <h2>Etkinlik çerçevesi</h2><p class="context-description">Küçük ayrıntılar, daha iyi bir plan.</p>
           <form id="settings-form" class="settings-form">
-            <label for="engine">Yanıt yolu</label><select id="engine"><option value="auto">Otomatik · önce kotasız seçenekler</option><option value="local">Yalnız yerel · 0 token</option><option value="ai">Yapay zekâ · kota kullanır</option></select><label for="memory">Karşılaştırma havuzu</label><select id="memory"><option value="current">Bu çalışma</option><option value="device">Bu cihazdaki çalışmalar · yerel</option></select>
+            <label for="engine">Yanıt yolu</label><select id="engine"><option value="auto">Akıllı sohbet · çalışmayı sürdür</option><option value="local">Yalnız hazır havuz · 0 token</option><option value="ai">Yapay zekâ · kota kullanır</option></select><label for="memory">Yerel havuzda karşılaştırma</label><select id="memory"><option value="current">Bu çalışma</option><option value="device">Bu cihazdaki çalışmalar · yerel</option></select>
             <label for="aiProfile">Yapay zekâ kullanımı</label><select id="aiProfile"><option value="economy">Ekonomik · göreve göre seçim</option><option value="research">Ayrıntılı bilimsel çalışma</option></select>
             <label for="domain">Etkinlik alanı</label><select id="domain"><option value="general">Birlikte seçelim</option></select>
             <label for="age">Yaş grubu</label><select id="age"><option value="6–8">6–8 yaş</option><option value="9–12" selected>9–12 yaş</option><option value="13–15">13–15 yaş</option><option value="16+">16 yaş ve üzeri</option></select>
-            <label for="difficulty">Bilimsel derinlik</label><select id="difficulty"><option value="intro">Başlangıç · keşfet</option><option value="intermediate">Orta · karşılaştır ve ölç</option><option value="advanced">İleri · model, grafik ve belirsizlik</option></select>
+            <label for="difficulty">Gönüllü için bilimsel derinlik</label><select id="difficulty"><option value="intro">Başlangıç · keşfet</option><option value="intermediate" selected>Araştırma · karşılaştır ve ölç</option><option value="advanced">İleri · model, hesap ve belirsizlik</option></select>
             <div class="field-pair"><div><label for="duration">Süre · dakika</label><input id="duration" type="number" min="10" max="180" step="5" value="40"></div><div><label for="participants">Katılımcı</label><input id="participants" type="number" min="1" max="200" value="20"></div></div>
-            <label for="materials">Elindeki malzemeler <span>isteğe bağlı</span></label><textarea id="materials" rows="3" maxlength="600" placeholder="Kâğıt, ip, renkli kalemler…"></textarea>
+            <label for="procurement">Malzeme erişimi</label><select id="procurement"><option value="obtainable">Uygun ürün ve kimyasalları tedarik edebiliriz</option><option value="owned">Yalnız elimizdeki malzemeler</option></select>
+            <label for="materials">Malzemeler / erişim sınırları <span>isteğe bağlı</span></label><textarea id="materials" rows="3" maxlength="600" placeholder="Örn. etiketli eğitim reaktifleri, iletkenlik ölçer, optik filtre, sınırlı bütçe…"></textarea>
             <label for="format">Kılavuz formatı</label><select id="format"><option value="ilkyar">Etkinlik arşivi düzeni</option><option value="research">Araştırma / deney düzeni</option></select>
             <label for="detail">Yanıt uzunluğu</label><select id="detail"><option value="auto">Otomatik</option><option value="short">Kısa</option><option value="detailed">Ayrıntılı</option></select>
           </form>

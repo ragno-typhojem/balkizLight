@@ -1,16 +1,17 @@
 import { conversationConstraints } from './lib/constraints.js';
-import { buildLocalReply, localIntent, LOCAL_VARIANT_COUNT } from './lib/local-engine.js?v=2.6.0';
+import { turnSettings } from './lib/conversation-state.js';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.7.0';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.6.0';
-import { TEMPLATES } from './lib/templates.js?v=2.6.0';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.6.0';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.6.0';
-import { readSSE } from './lib/sse.js?v=2.6.0';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.7.0';
+import { TEMPLATES } from './lib/templates.js?v=2.7.0';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.7.0';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.7.0';
+import { readSSE } from './lib/sse.js?v=2.7.0';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
-const DEFAULTS = { engine: 'auto', aiProfile: 'economy', memory: 'current', domain: 'general', task: 'auto', format: 'ilkyar', detail: 'auto', difficulty: 'intro', age: '9–12', duration: 40, participants: 20, materials: '' };
+const DEFAULTS = { engine: 'auto', aiProfile: 'economy', procurement: 'obtainable', memory: 'current', domain: 'general', task: 'auto', format: 'ilkyar', detail: 'auto', difficulty: 'intermediate', age: '9–12', duration: 40, participants: 20, materials: '' };
 const SETTINGS = Object.keys(DEFAULTS);
 const e = Object.fromEntries(['history', 'thread', 'scroll', 'input', 'send', 'toast', 'sidebar'].map(name => [name, $(`#${name}`)]));
 let chats = {}, active = '', busy = false, readingFiles = false, following = true, saving, toastTimer, streamController;
@@ -244,15 +245,17 @@ function requestMessagesWithPreferences(messages) {
   if (constraints.excluded.length) wire.unshift({ role: 'user', content: 'Bu çalışmada korunan önceki kullanıcı tercihleri: ' + constraints.excluded.map(id => statements[id]).join(' ') });
   return wire;
 }
-async function send(retry = false) {
+async function send(retry = false, fromLibrary = false) {
   if (busy || readingFiles) return;
   const chat = chats[active]; if (!chat) return;
   const draft = e.input.value.trim();
-  const input = { messages: [...chat.messages.filter(message => message.content.trim() && (message.role === 'user' || message.status === 'done' && !message.meta?.truncated)).map(({role,content}) => ({role,content})), { role: 'user', content: draft }], settings: getSettings(), attachments: currentFiles };
+  const resolvedSettings = turnSettings(draft,getSettings());
+  if (!retry) setSettings(resolvedSettings);
+  const input = { messages: [...chat.messages.filter(message => message.content.trim() && (message.role === 'user' || message.status === 'done' && !message.meta?.truncated)).map(({role,content}) => ({role,content})), { role: 'user', content: draft }], settings: { ...resolvedSettings, ...(fromLibrary ? {engine:'local'} : {}) }, attachments: currentFiles };
   const memory = input.settings.memory === 'device' ? Object.values(chats).sort((a,b) => b.updatedAt - a.updatedAt).slice(0,30).flatMap(item => item.messages.slice(-12).filter(message => message.status === 'done' && !message.meta?.truncated).map(message => ({role:message.role,content:message.content.slice(0,1800)}))) : chat.messages.filter(message => message.status === 'done' && !message.meta?.truncated);
   const local = !retry && draft ? buildLocalReply(input, memory) : null;
   if (!local && (Date.now() < cooldownUntil || !navigator.onLine)) { toast('Yapay zekâ şu an kullanılamıyor; malzeme bulma ve yerel fikir havuzu kullanılabilir.'); return; }
-  if (!local && input.settings.engine === 'local') { toast('Bu istek hazır havuzda karşılanamadı. Fikir havuzundan seç veya Otomatik/Yapay zekâ moduna geç.'); return; }
+  if (!retry && !local && input.settings.engine === 'local') { toast('Bu istek hazır havuzda karşılanamadı. Fikir havuzundan seç veya Otomatik/Yapay zekâ moduna geç.'); return; }
   let payload;
   if (retry) {
     if (!retryPayload || retryPayload.chatId !== active) return;
@@ -504,16 +507,16 @@ function renderMaterials() {
 }
 function renderIdeas() {
   const words = normalize($('#idea-search').value).split(/\s+/).filter(Boolean);
-  $('#ideas-description').textContent = `${EXPERIMENT_BANK.length} özgün araştırma fikri, ${LOCAL_VARIANT_COUNT} yöntem/analiz uyarlaması. Bunlar farklılığı doğrulanmış deney sonuçları değildir. Kotasız açılır; her uygulama öğretmen ön denemesi gerektirir.`;
+  $('#ideas-description').textContent = `${EXPERIMENT_BANK.length} kaynaklarla ilişkili araştırma başlangıcı. Serbest sohbet bu havuzla sınırlı değildir. Kotasız açılır; yeni uygulama öğretmen ön denemesi gerektirir.`;
   const list = $('#idea-list'); list.replaceChildren();
   for (const card of EXPERIMENT_BANK.filter(card => words.every(word => normalize(`${card.title} ${card.question} ${activityLabel(card.domain)} ${card.materials.map(id => MATERIALS.find(item => item.id === id)?.name).join(' ')}`).includes(word)))) {
     const node = document.createElement('article'); node.className = 'template-card';
-    node.innerHTML = `<span class="template-category">${escapeHTML(activityLabel(card.domain))} · ${card.minAge}+ yaş</span><h3>${escapeHTML(card.title)}</h3><p>${escapeHTML(card.question)}</p>`;
+    node.innerHTML = `<span class="template-category">${escapeHTML(activityLabel(card.domain))} · ${card.minAge}+ yaş${card.difficulty === 'advanced' ? ' · İleri araştırma' : ''}</span><h3>${escapeHTML(card.title)}</h3><p>${escapeHTML(card.question)}</p>`;
     const open = document.createElement('button'); open.textContent = 'Kotasız aç'; open.onclick = () => {
       if (!canNavigate()) return;
       const age = Number($('#age').value.split('–')[0].replace('+',''));
       if (age < card.minAge) { toast(`Bu fikir ${card.minAge}+ yaş için. Uygun yaş grubunu seç veya başka fikir aç.`); return; }
-      $('#ideas-dialog').close(); $('#domain').value = card.domain; $('#engine').value = 'auto'; settingsChanged(); e.input.value = `${activityLabel(card.domain)} alanında ${card.title} için kılavuz yaz.`; grow(); send();
+      $('#ideas-dialog').close(); $('#domain').value = card.domain; settingsChanged(); e.input.value = `${activityLabel(card.domain)} alanında ${card.title} için kılavuz yaz.`; grow(); send(false,true);
     }; node.append(open); list.append(node);
   }
 }
