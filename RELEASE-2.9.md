@@ -1,4 +1,4 @@
-# BALKIZ Light 2.9.4 · Atölye
+# BALKIZ Light 2.9.5 · Atölye
 
 Sade ana ekran: üç başlangıç, dosya ve mesaj. Yaş, süre/katılımcı ve malzeme drawer içinde; diğer tercihler ayrıca açılır. Kalıcı BALKIZ ve İLKYAR işaretleri korunur. Açık tema sıcak kâğıt/yeşil, koyu tema koyu botanik renkleri kullanır. Cihazda Comic Sans MS varsa kullanılır; yoksa birlikte dağıtılan OFL lisanslı Comic Neue kullanılır. Yazıtipi için üçüncü tarafa istek yapılmaz.
 
@@ -23,3 +23,5 @@ Otomatik testler: sohbet belleği, dışlamalar, kota/fallback, JSON tamamlanmas
 Cloudflare GPT-OSS isteklerinde düşünme düzeyi artık iletilir; sessizce orta düzeye dönülmez. “Olmadan” dışlaması hem kaynak seçimini hem çıktı kontrolünü etkiler. Kesilmiş yanıtlar yine gösterilmez.
 
 Cloudflare isteğinde JSON nesne biçimi açıkça talep edilir; istemciye yine yalnız tamamlanmış, yerel denetimden geçen çıktı gösterilir.
+
+Canlı kimya akışında Türkçe sayı sözcükleri ve “kılavuz yazma” isteği sınandı. Fikir istekleri tarif kartına zorlanmaz; “başka araştırma” yeni mekanizma olarak ele alınır. Doğrulanmamış sayısal kimyasal tarifler ve yakalanan karbonat/tiyosiyanat tutarsızlıkları ayrıca engellenir. Bu kurallar genel bilimsel doğruluk kanıtı değildir.

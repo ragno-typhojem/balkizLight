@@ -79,3 +79,17 @@ test('generic chemistry wording cannot attach a writing workshop or astronomy fa
   assert.ok(note.sources.every(source=>['chemistry','science'].includes(source.domain)));
   assert.ok(!note.sources.some(source=>source.id==='nasa-seasons'||source.id==='guide-1go6WPc_FB8awwQR4l6vgLsFuowBDwqG6'));
 });
+
+test('Turkish word counts and negated guide requests preserve conversational intent',()=>{
+  for (const text of ['İki farklı araştırma fikri öner','Üç farklı kimya deneyi öner']) {const p=prepareRequest(validateInput({messages:[{role:'user',content:text}],settings:{domain:'chemistry'}})); assert.equal(p.experimentCard,false); assert.equal(p.intent,'ideas');}
+  const p=prepareRequest(validateInput({messages:[{role:'assistant',content:'### 1. Jel\n### 2. İletkenlik'},{role:'user',content:'İkincisini geliştir; tam kılavuz yazma.'}],settings:{domain:'chemistry'}})); assert.equal(p.intent,'chat'); assert.equal(p.experimentCard,false);
+  const n=prepareRequest(validateInput({messages:[{role:'user',content:'Farklı mekanizmayla başka kimya araştırması öner.'}],settings:{domain:'chemistry'}})); assert.equal(n.novel,true);
+});
+
+test('chemistry output rejects unsupported doses and observed carbonate/thiocyanate errors',async()=>{
+  const {validateAndRender}=await import('../lib/output.js');
+  const prepared=prepareRequest(validateInput({messages:[{role:'user',content:'Kimya konusunu açıkla'}],settings:{domain:'chemistry',task:'explain'}}));
+  assert.equal(prepared.experimentCard,false);
+  for(const reply of ['Sodyum karbonat ve kalsiyum klorür karışımında CO2 gazı çıkar.','Demir tiyosiyanat manyetik bir çökelti oluşturur.','5 g kalsiyum klorürü 50 mL suya ekle ve karıştır.']) assert.throws(()=>validateAndRender(JSON.stringify({reply}),prepared));
+  assert.doesNotThrow(()=>validateAndRender(JSON.stringify({reply:'Kalsiyum klorür ve sodyum bikarbonat için öğretmenin hazırladığı etiketli eğitim çözeltilerini kullan; gözlemi su kontrolleriyle karşılaştır.'}),prepared));
+});
