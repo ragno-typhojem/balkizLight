@@ -27,3 +27,5 @@ Cloudflare isteğinde JSON nesne biçimi açıkça talep edilir; istemciye yine 
 Canlı kimya akışında Türkçe sayı sözcükleri ve “kılavuz yazma” isteği sınandı. Fikir istekleri tarif kartına zorlanmaz; “başka araştırma” yeni mekanizma olarak ele alınır. Doğrulanmamış sayısal kimyasal tarifler ve yakalanan karbonat/tiyosiyanat tutarsızlıkları ayrıca engellenir. Bu kurallar genel bilimsel doğruluk kanıtı değildir.
 
 Kısa araştırma fikri, yöntem kartı ve kılavuz ayrı çıktılardır. Bir araştırma fikri istendiğinde adım/miktar eklenmez; tam deney yöntemi açıkça istendiğinde açılır. Ana kütüphane 99 fikirle açılır; 31 kılavuz taslağı ikinci düzeydedir.
+
+Cloudflare için hızlı Llama 3.3 70B seçeneği JSON moduyla kullanılır. Sağlayıcıya tek bir birleştirilmiş sistem iletisi gider; politika ve kaynak notları ayrılıp kaybolmaz. Groq yedek olarak kalır. Model çıktısı genel bilimsel doğruluk garantisi vermez; bilinen kritik kimya/uygulama hataları ayrıca denetlenir.
