@@ -1,6 +1,6 @@
 import { buildLocalReply } from '../lib/local-engine.js';
 import { laboratoryClarification, conversationConstraints } from '../lib/constraints.js';
-import { validateAndRender, OutputError } from '../lib/output.js';
+import { validateAndRender, referenceIdeaFallback, OutputError } from '../lib/output.js';
 import { validateInput, prepareRequest, InputError } from '../lib/policy.js';
 import { Governor, BusyError, quotaReset } from '../lib/governor.js';
 import { readSSE, encodeEvent } from '../lib/sse.js';
@@ -178,7 +178,14 @@ export function createHandler({ env = {}, fetchImpl = fetch, now = () => Date.no
               const choice = result.choices?.[0];
               if (choice?.finish_reason === 'length') throw new OutputError('Yanıt uzunluk sınırında kesildi. Yarım deney adımları gösterilmedi; daha kısa bir fikir iste.');
               if (choice?.finish_reason !== 'stop') throw new OutputError('Yanıt tamamlanamadı; uygulama adımları gösterilmedi.');
-              const text = validateAndRender(choice.message?.content || '', prepared);
+              let text;
+              try { text = validateAndRender(choice.message?.content || '', prepared); }
+              catch (error) {
+                const grounded = error instanceof OutputError ? referenceIdeaFallback(prepared) : '';
+                if (!grounded) throw error;
+                text = '**Kaynaklı araştırma başlangıcı:** Model yanıtı kaynak/kısıt denetimini geçmediği için aşağıdaki yerel başlangıcı seçtim. Ek yapay zekâ çağrısı yapılmadı.\n\n' + grounded;
+                meta.referenceFallback = true;
+              }
               meta.checked = true;
               if (controller.signal.aborted) throw new Error('aborted');
               if (cacheKey) { cache.set(cacheKey, { text, meta, expires: now() + 300000 }); cleanCache(); }

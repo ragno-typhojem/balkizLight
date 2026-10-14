@@ -170,3 +170,15 @@ test('arts activity requests keep explicit option counts and the reliable genera
  const p=prepareRequest(validateInput({messages:[{role:'user',content:'İki farklı yaratıcı drama etkinliği için fikir öner'}],settings:{domain:'drama'}}));
  assert.equal(p.route,'research');assert.equal(p.ideaCount,2);
 });
+
+test('rejected chemical ideas can use a source-based fallback without unsupported doses',async()=>{
+ const {validateAndRender,referenceIdeaFallback}=await import('../lib/output.js');
+ const p=prepareRequest(validateInput({messages:[{role:'user',content:'Başka kimya araştırması öner'}],settings:{domain:'chemistry',age:'13–15'}}));
+ const bad={ideas:[{title:'Pas',question:'Hidrojen peroksit eklenmesi nasıl etkiler?',mechanism:'Oksidasyon',measurement:'%3 ve %6 derişim.',safety:'Gözlük takın.'}]};
+ assert.throws(()=>validateAndRender(JSON.stringify(bad),p));
+ assert.throws(()=>validateAndRender(JSON.stringify({...bad,ideas:[{...bad.ideas[0],measurement:'3% ve 6% derişim.'}]}),p));
+ const text=referenceIdeaFallback(p);assert.ok(text);assert.match(text,/Kontrol:/);assert.ok(!text.includes('peroksit'));
+ assert.equal(referenceIdeaFallback({...p,proposalSeeds:[]}), '');
+ const younger=prepareRequest(validateInput({messages:[{role:'user',content:'Kimya için farklı fikir öner'}],settings:{domain:'chemistry',age:'6–8'}}));
+ assert.ok(younger.proposalSeeds.every(seed=>seed.minAge<=6));
+});

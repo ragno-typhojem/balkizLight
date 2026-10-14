@@ -94,3 +94,12 @@ test('SSE decoder handles one-byte UTF-8 chunks and final unterminated data', as
   const result = []; for await (const raw of readSSE(stream)) result.push(JSON.parse(raw));
   assert.equal(result[0].delta, 'İlk keşif 🌱'); assert.equal(result[1].done, true);
 });
+
+test('a rejected novel idea gets a transparent grounded fallback with one upstream charge',async()=>{
+ let calls=0;const handler=createHandler({env:{GROQ_API_KEY:'fake-key'},fetchImpl:async()=>{calls++;return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({ideas:[{title:'Pas',question:'Hidrojen peroksit eklenmesi nasıl etkiler?',mechanism:'Oksidasyon.',measurement:'3% ve 6% derişim.',safety:'Gözlük takın.'}]})}}],usage:{total_tokens:500}});}});
+ const result=await events(await handler(request({messages:[{role:'user',content:'Başka kimya araştırması öner'}],settings:{domain:'chemistry',age:'13–15'}})));
+ assert.equal(calls,1);assert.ok(result.some(event=>event.meta?.referenceFallback));
+ const text=result.filter(event=>event.delta).map(event=>event.delta).join('');
+ assert.match(text,/Kaynaklı araştırma başlangıcı/);assert.match(text,/Ek yapay zekâ çağrısı yapılmadı/);assert.doesNotMatch(text,/peroksit|3%|6%/);
+ assert.equal(result.at(-1).done,true);assert.equal(result.at(-1).usage.charged,500);
+});
