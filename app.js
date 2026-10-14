@@ -1,14 +1,14 @@
 import { listingsFor, PROCUREMENT_DATE } from './lib/procurement.js';
 import { conversationConstraints } from './lib/constraints.js';
 import { turnSettings } from './lib/conversation-state.js';
-import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.3';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.4';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.3';
-import { TEMPLATES } from './lib/templates.js?v=2.9.3';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.3';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.3';
-import { readSSE } from './lib/sse.js?v=2.9.3';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.4';
+import { TEMPLATES } from './lib/templates.js?v=2.9.4';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.4';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.4';
+import { readSSE } from './lib/sse.js?v=2.9.4';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -195,11 +195,11 @@ function render() {
   document.body.classList.toggle('is-conversing', Boolean(chat?.messages.length));
   $('#work-title').textContent = chat?.title || 'Yeni çalışma';
   if (chat?.messages.length) chat.messages.forEach(message => { const article = addMessage(message); article.classList.add('restored'); }); else welcome();
-  following = Boolean(chat?.messages.length); requestAnimationFrame(() => { if (following) bottom(); else { e.scroll.scrollTop = 0; $('#jump').hidden = true; } }); renderFiles(); grow();
+  const shouldScroll = Boolean(chat?.messages.length); following = shouldScroll; requestAnimationFrame(() => { if (shouldScroll) bottom(); else { e.scroll.scrollTop = 0; $('#jump').hidden = true; } }); renderFiles(); grow();
 }
 function nearBottom() { return e.scroll.scrollHeight - e.scroll.scrollTop - e.scroll.clientHeight < 90; }
 function bottom() { e.scroll.scrollTop = e.scroll.scrollHeight; $('#jump').hidden = true; }
-e.scroll.addEventListener('scroll', () => { following = nearBottom(); $('#jump').hidden = following; }, { passive: true });
+e.scroll.addEventListener('scroll', () => { if (e.thread.querySelector('.welcome')) { following = false; $('#jump').hidden = true; return; } following = nearBottom(); $('#jump').hidden = following; }, { passive: true });
 $('#jump').onclick = () => { following = true; bottom(); };
 function grow() {
   e.input.style.height = 'auto'; e.input.style.height = `${Math.min(e.input.scrollHeight, matchMedia('(max-width:720px)').matches ? 120 : 150)}px`;
