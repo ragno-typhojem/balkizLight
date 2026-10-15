@@ -1,14 +1,15 @@
+import { nextWelcome } from './lib/welcome.js';
 import { listingsFor, PROCUREMENT_DATE } from './lib/procurement.js';
 import { conversationConstraints } from './lib/constraints.js';
 import { turnSettings } from './lib/conversation-state.js';
-import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.11';
+import { buildLocalReply, localIntent } from './lib/local-engine.js?v=2.9.12';
 import { MATERIALS, STORES, marketLink } from './lib/materials.js';
 import { EXPERIMENT_BANK } from './lib/experiment-bank.js';
-import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.11';
-import { TEMPLATES } from './lib/templates.js?v=2.9.11';
-import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.11';
-import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.11';
-import { readSSE } from './lib/sse.js?v=2.9.11';
+import { SOURCES, REFERENCE_LIBRARY, GUIDES, DISCLAIMER, KNOWLEDGE_VERSION, normalize } from './lib/knowledge.js?v=2.9.12';
+import { TEMPLATES } from './lib/templates.js?v=2.9.12';
+import { ACTIVITY_AREAS, activityLabel } from './lib/activities.js?v=2.9.12';
+import { extractFile, FILE_LIMITS } from './lib/files.js?v=2.9.12';
+import { readSSE } from './lib/sse.js?v=2.9.12';
 
 const $ = selector => document.querySelector(selector);
 const KEY = 'balkiz_chats_v3', THEME = 'balkiz_theme_v2';
@@ -130,9 +131,11 @@ const IDEAS = [
   { icon: 'flask', title: 'Birlikte geliştirelim', text: 'Fikrini anlat, bir adım ileri taşıyalım.', query: '', task: 'auto', domain: 'general' },
   { icon: 'book', title: 'Kılavuz hazırlayalım', text: 'Hazır olduğunda uygulanabilir bir akış.', query: 'Kılavuzunu hazırlamak istediğim etkinlik: ', task: 'guide', domain: 'general' },
 ];
-const greeting = () => { const hour = new Date().getHours(); return hour < 6 ? 'İyi geceler.' : hour < 12 ? 'Günaydın.' : hour < 18 ? 'Merhaba.' : 'İyi akşamlar.'; };
+let openingMessage;
+try { openingMessage = nextWelcome(localStorage); } catch { openingMessage = nextWelcome(); }
+const greeting = () => openingMessage;
 function welcome() {
-  e.thread.innerHTML = `<div class="welcome"><div class="welcome-orbit" aria-hidden="true"><span></span><span></span><span></span><img src="/assets/balkiz-mark.svg" alt="" width="64" height="64"></div><div class="welcome-kicker">${greeting()} Burada olman güzel.</div><h1>Bugün hangi merakın<br><span>peşinden gidelim?</span></h1><p class="welcome-copy">Bir soru ya da yarım kalmış bir fikir yeter.<br>Bilimden sanata, birlikte yeni bir yol bulalım.</p><div class="welcome-grid">${IDEAS.map((idea, index) => `<button class="idea-card" data-idea="${index}"><div class="idea-icon">${icon(idea.icon)}</div><b>${idea.title}</b><small>${idea.text}</small><span class="card-arrow">↗</span></button>`).join('')}</div><details class="welcome-explore"><summary>Bir alandan başlamak ister misin?</summary><div class="topic-chips">${[['physics','Fizik / Fen'],['chemistry','Kimya'],['ai','Yapay zekâ'],['astronomy','Astronomi'],['drama','Yaratıcı drama'],['origami','Origami']].map(([domain, title]) => `<button class="topic-chip" data-domain="${domain}" aria-pressed="${$('#domain').value === domain}">${title}</button>`).join('')}</div><button class="welcome-library" data-library>${icon('book')} Etkinlik kütüphanesini keşfet <span>↗</span></button></details></div>`;
+  e.thread.innerHTML = `<div class="welcome"><div class="welcome-orbit" aria-hidden="true"><span></span><span></span><span></span><img src="/assets/balkiz-mark.svg" alt="" width="64" height="64"></div><div class="welcome-kicker">${escapeHTML(greeting())}</div><h1>Bugün hangi merakın<br><span>peşinden gidelim?</span></h1><p class="welcome-copy">Bir soru ya da yarım kalmış bir fikir yeter.<br>Bilimden sanata, birlikte yeni bir yol bulalım.</p><div class="welcome-grid">${IDEAS.map((idea, index) => `<button class="idea-card" data-idea="${index}"><div class="idea-icon">${icon(idea.icon)}</div><b>${idea.title}</b><small>${idea.text}</small><span class="card-arrow">↗</span></button>`).join('')}</div><details class="welcome-explore"><summary>Bir alandan başlamak ister misin?</summary><div class="topic-chips">${[['physics','Fizik / Fen'],['chemistry','Kimya'],['ai','Yapay zekâ'],['astronomy','Astronomi'],['drama','Yaratıcı drama'],['origami','Origami']].map(([domain, title]) => `<button class="topic-chip" data-domain="${domain}" aria-pressed="${$('#domain').value === domain}">${title}</button>`).join('')}</div><button class="welcome-library" data-library>${icon('book')} Etkinlik kütüphanesini keşfet <span>↗</span></button></details></div>`;
   e.thread.querySelectorAll('[data-idea]').forEach(button => button.onclick = () => {
     const idea = IDEAS[Number(button.dataset.idea)]; e.input.value = idea.query; e.input.placeholder = idea.query ? 'Bir fikir, bir soru, bir keşif…' : 'Etkinliğini ya da aklındaki fikri anlat…'; $('#task').value = idea.task; $('#domain').value = idea.domain; settingsChanged(); grow(); e.input.focus();
   });
@@ -149,7 +152,7 @@ function addMessage(message) {
     content.textContent = message.content;
     if (message.files?.length) { const attached = document.createElement('span'); attached.className = 'attached-names'; attached.textContent = `Ekler: ${message.files.join(', ')}`; content.append(attached); }
   } else {
-    if (message.status === 'pending') content.innerHTML = '<span class="thinking"><span class="thinking-dot"></span> Yanıt hazırlanıyor; deney adımları tamamlanınca gösterilecek…</span>';
+    if (message.status === 'pending') { article.classList.add('is-thinking'); content.setAttribute('aria-busy','true'); content.innerHTML = '<div class="thinking-studio" role="status"><div class="thinking-orb" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="thinking-copy"><span class="thinking-title">Birlikte düşünüyorum<span aria-hidden="true">…</span></span><span class="thinking-caption">Fikrini biraz açalım.</span></div><div class="thinking-trails" aria-hidden="true"><span></span><span></span></div></div>'; }
     else { content.innerHTML = message.meta?.truncated ? '<p class="error-note">Bu eski yanıt uzunluk sınırında kesildi. Yarım deney tarifi gösterilmiyor; yeni bir kısa fikir iste.</p>' : markdown(message.content); if (message.status === 'stopped' && !message.meta?.truncated) content.insertAdjacentHTML('beforeend', '<p class="error-note">Bu yanıt tamamlanmadı; uygulamadan önce kontrol et.</p>'); }
     if (message.meta) responseMeta(article, message.meta);
     if (message.content && message.status !== 'pending' && !message.meta?.truncated) responseControls(article, message);
@@ -286,7 +289,7 @@ async function send(retry = false, fromLibrary = false) {
   streamController = new AbortController();
   const timeout = setTimeout(() => streamController?.abort(), 65000);
   let paintTimer, finished = false;
-  const paint = () => { paintTimer = null; box.classList.add('streaming-content'); box.textContent = answer.content; if (following) bottom(); };
+  const paint = () => { paintTimer = null; article.classList.remove('is-thinking'); article.classList.add('is-answering'); box.setAttribute('aria-busy','false'); box.classList.add('streaming-content'); box.textContent = answer.content; if (following) bottom(); };
   try {
     const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: streamController.signal });
     if (!response.ok) {
@@ -307,18 +310,18 @@ async function send(retry = false, fromLibrary = false) {
       if (event.done) { if (event.usage) { answer.meta = { ...answer.meta, usage: event.usage }; responseMeta(article, answer.meta); } finished = true; if (event.truncated) { answer.meta = { ...answer.meta, truncated: true }; } break; }
     }
     if (!finished) throw new Error('Bağlantı kesildi; bu yanıt tamamlanmadı.');
-    clearTimeout(paintTimer); box.classList.remove('streaming-content'); box.innerHTML = markdown(answer.content);
+    clearTimeout(paintTimer); article.classList.remove('is-thinking','is-answering'); article.classList.add('answer-arrived'); box.setAttribute('aria-busy','false'); box.classList.remove('streaming-content'); box.innerHTML = markdown(answer.content);
     answer.status = answer.meta?.truncated ? 'stopped' : 'done';
     if (answer.meta?.truncated) box.insertAdjacentHTML('beforeend', '<p class="error-note">Yanıt uzunluk sınırına ulaştı. Eksik planı uygulama; belirli bir bölümü ayrıntılandırmamı iste.</p>');
     responseControls(article, answer); announce('BALKIZ yanıtı tamamlandı.'); retryPayload = null;
   } catch (error) {
-    clearTimeout(paintTimer); box.classList.remove('streaming-content'); box.innerHTML = markdown(answer.content);
+    clearTimeout(paintTimer); article.classList.remove('is-thinking','is-answering'); article.classList.add('answer-arrived'); box.setAttribute('aria-busy','false'); box.classList.remove('streaming-content'); box.innerHTML = markdown(answer.content);
     answer.status = streamController.signal.aborted ? 'stopped' : 'error';
     const note = document.createElement('div'); note.className = 'error-note'; note.textContent = streamController.signal.aborted ? 'Yanıt durduruldu veya süre doldu. Bu yanıt tamamlanmadı.' : error.message; box.append(note);
     const retryButton = document.createElement('button'); retryButton.className = 'retry-button'; retryButton.textContent = 'Tekrar dene'; retryButton.onclick = () => send(true); retryButton.disabled = Date.now() < cooldownUntil;
     box.append(retryButton); if (answer.content) responseControls(article, answer); announce(note.textContent);
   } finally {
-    clearTimeout(timeout); clearTimeout(paintTimer); busy = false; streamController = null; chat.updatedAt = Date.now(); save(); history(); grow(); connection(); if (following) bottom();
+    clearTimeout(timeout); clearTimeout(paintTimer); article.classList.remove('is-thinking','is-answering'); box.setAttribute('aria-busy','false'); busy = false; streamController = null; chat.updatedAt = Date.now(); save(); history(); grow(); connection(); if (following) bottom();
   }
 }
 
@@ -493,7 +496,7 @@ window.addEventListener('pagehide', () => save(true));
 try { document.documentElement.dataset.theme = localStorage.getItem(THEME) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch { /* defaults to light */ }
 $('#year').textContent = new Date().getFullYear();
 chats = load(); active = Object.values(chats).sort((a, b) => b.updatedAt - a.updatedAt)[0]?.id || '';
-if (active) { setSettings(chats[active].settings); render(); if (chats[active].messages.length) toast(`${greeting()} Kaldığımız yerden devam edebiliriz.`); } else createChat();
+if (active) { setSettings(chats[active].settings); render(); if (chats[active].messages.length) toast(greeting()); } else createChat();
 closeDrawers(); connection();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { /* online app remains usable */ });
 
