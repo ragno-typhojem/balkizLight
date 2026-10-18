@@ -150,7 +150,7 @@ button:active{transform:scale(.97)}button{transition:transform .18s var(--ease),
 /* State-driven motion: active only while waiting, streaming or revealing. */
 .welcome-kicker{max-width:560px;margin-left:auto;margin-right:auto;text-wrap:pretty;line-height:1.65;min-height:2.8em}
 .welcome-main-greeting{display:block;font-size:clamp(17px,2vw,23px);line-height:1.35;font-weight:600;color:var(--text);letter-spacing:-.2px}
-.welcome-greeting-tail{display:block;margin-top:4px;font-size:12px;line-height:1.55;color:var(--muted);font-weight:400}
+.welcome-greeting-tail{display:block;margin-top:4px;font-size:clamp(17px,2vw,23px);line-height:1.35;color:var(--text);font-weight:600;letter-spacing:-.2px}
 .welcome-kicker:has(.welcome-main-greeting){margin-bottom:26px}
 .thinking-studio{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;align-items:center;padding:12px 0 8px;max-width:460px;animation:thought-appear .45s var(--ease) both}
 .thinking-orb{width:44px;height:44px;position:relative;animation:thought-turn 8s linear infinite}
